@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: keycloak.Dockerfile
-    # or: image: quay.io/keycloak/keycloak:26.0.7
     container_name: keycloak-demo
     environment:
       KC_DB: dev-file
@@ -11,7 +10,6 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_IMPORT: /opt/keycloak/data/import/test-realm.json
-    # You can decide how to map ports:
     volumes:
       - "${HOST_WORKSPACE}/test/bootstrap/keycloak/test-realm.json:/opt/keycloak/data/import/test-realm.json"
       - test_data:/opt/keycloak/data
