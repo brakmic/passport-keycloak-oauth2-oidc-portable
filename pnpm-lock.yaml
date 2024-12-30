@@ -51,6 +51,9 @@ importers:
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@22.10.2)
+      jest-resolve:
+        specifier: ^29.7.0
+        version: 29.7.0
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
