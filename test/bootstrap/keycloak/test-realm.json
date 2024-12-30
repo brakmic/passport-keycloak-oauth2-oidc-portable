@@ -1,0 +1,56 @@
+{
+  "id": "5a64bff1-4c6f-4ec2-ae1c-249102bbce41",
+  "realm": "TestRealm",
+  "enabled": true,
+  "notBefore": 0,
+  "defaultSignatureAlgorithm": "RS256",
+  "sslRequired": "none",
+  "users": [
+    {
+      "username": "test-user",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "test-user@example.com",
+      "firstName": "Test",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "id": "13eb2a21-ef19-46a2-8a21-b6d81ed4ace2",
+      "clientId": "test-client",
+      "name": "TestClient",
+      "description": "OIDC Client for Integration Tests",
+      "rootUrl": "",
+      "adminUrl": "",
+      "baseUrl": "",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "public-client",
+      "redirectUris": [
+        "http://localhost:3000/callback"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "publicClient": true,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect"
+    }
+  ]
+}
