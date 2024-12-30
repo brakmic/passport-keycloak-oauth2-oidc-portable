@@ -1,0 +1,6 @@
+node_modules/
+.pnpm_store/
+.devcontainer/
+lib/
+LICENSE
+README.md
