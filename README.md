@@ -4,11 +4,13 @@
 
 This module lets you authenticate using Keycloak in your Node.js applications. By plugging into Passport, Keycloak authentication can be easily and unobtrusively integrated into any application or framework that supports [Connect](http://www.senchalabs.org/connect/)-style middleware, including [Express](http://expressjs.com/).
 
+---
+
 ## Why I Did This
 
-This project wasn’t up to date for some time. I forked it to bring it into the modern world while trying out a few things I’ve been exploring with Keycloak. I wanted to create a seamless developer experience and ensure the library works well with Keycloak’s latest features. It’s part of my broader journey into exploring and blogging about Keycloak and other technologies. You can check out my blog for insights and tutorials: [blog.brakmic.com](https://blog.brakmic.com).
+This project wasn’t up to date for some time. I forked it to bring it into the modern world while trying out a few things I’ve been exploring with Keycloak. You can check out my blog for insights and tutorials: [blog.brakmic.com](https://blog.brakmic.com).
 
-When I’m not tweaking or modernizing existing projects, I’m usually deep-diving into new concepts, sharing my findings with the community, and making tools that are as elegant and developer-friendly as possible.
+---
 
 ## What's New in This Fork?
 
@@ -27,20 +29,26 @@ Here’s a rundown of what I’ve added and updated:
 - **Efficient Package Management**: Switched to PNPM for better dependency management. Nothing against npm—it’s just that PNPM is way better, faster, and more elegant.
 - **CI-Ready Scripts**: Scripts for starting/stopping Keycloak, running tests, and linting are all in `package.json`.
 
+---
+
 ## Install
 
 ```bash
-$ pnpm install passport-keycloak-oauth2-oidc
+$ pnpm install passport-keycloak-oauth2-oidc-portable
 ```
+
+---
 
 ## Usage
 
 ### Create an Application
 
-Before using `passport-keycloak-oauth2-oidc`, you must create a `realm` and `client` in Keycloak. Ensure that:
+Before using `passport-keycloak-oauth2-oidc-portable`, you must create a `realm` and `client` in Keycloak. Ensure that:
 
 1. Your client is properly configured (e.g., `Access Type`, `Redirect URIs`).
 2. Your realm includes the necessary scopes and role mappings.
+
+---
 
 ### Configure Strategy
 
@@ -55,41 +63,109 @@ Options:
 - `callbackURL`: Redirect URL for post-authentication.
 - `sslRequired`: SSL requirement (`all`, `external`, or `none`; default: `external`).
 
-```javascript
-const KeyCloakStrategy = require('passport-keycloak-oauth2-oidc').Strategy;
+---
 
-passport.use(new KeyCloakStrategy(
-  {
-    clientID: 'myOauthClient',
-    realm: 'MyKeyCloakRealm',
-    publicClient: false,
-    clientSecret: 'myClientSecret',
-    sslRequired: 'external',
-    authServerURL: 'https://keycloak.example.com/auth',
-    callbackURL: 'https://www.example.com/keycloak/callback',
-  },
-  function(accessToken, refreshToken, profile, done) {
-    User.findOrCreate(..., function(err, user) {
-      done(err, user);
-    });
-  }
-));
+### Example 1: Confidential Client
+
+```javascript
+var KeyCloakStrategy = require('passport-keycloak-oauth2-oidc-portable').Strategy;
+passport.use(
+  new KeyCloakStrategy(
+    {
+      clientID: 'myOauthClient',
+      realm: 'MyKeyCloakRealm',
+      publicClient: false,
+      clientSecret: '6ee0f303-faef-42d7-ba8e-00cdec755c42',
+      sslRequired: 'external',
+      authServerURL: 'https://your.keycloak.com/',
+      callbackURL: 'https://your.server.com/callback',
+    },
+    function (accessToken, refreshToken, profile, done) {
+      User.findOrCreate(..., function (err, user) {
+        done(err, user);
+      });
+    }
+  )
+);
 ```
+
+---
+
+### Example 2: Public Client (`publicClient=true`) with Local Keycloak and Mock Server
+
+This example demonstrates how to configure a public client and use a mock server to simulate the complete OpenID Connect flow.
+
+1. Start Keycloak via Docker Compose:
+
+```bash
+sudo docker compose -f test/bootstrap/docker-compose.test.yml up -d
+```
+
+2. Start the Mock Server:
+
+```bash
+pnpm run mock-server
+```
+
+3. Example Code:
+
+```javascript
+const express = require('express');
+const passport = require('passport');
+const KeyCloakStrategy = require('passport-keycloak-oauth2-oidc-portable').Strategy;
+
+const app = express();
+
+// Configure the Keycloak Strategy
+passport.use(
+  new KeyCloakStrategy(
+    {
+      clientID: 'test-client', // Replace with your clientID
+      realm: 'TestRealm',      // Replace with your realm
+      publicClient: true,
+      sslRequired: 'none',
+      authServerURL: 'http://localhost:8080', // Ensure Keycloak is running
+      callbackURL: 'http://localhost:3000/callback',
+    },
+    (accessToken, refreshToken, profile, done) => {
+      // Verify callback
+      console.log('User profile:', profile);
+      return done(null, profile);
+    }
+  )
+);
+
+// Middleware for passport
+app.use(passport.initialize());
+
+// Route to initiate authentication
+app.get(
+  '/auth/keycloak',
+  passport.authenticate('keycloak', { scope: ['openid', 'profile', 'email'] })
+);
+
+// Callback route
+app.get(
+  '/auth/keycloak/callback',
+  passport.authenticate('keycloak', { failureRedirect: '/login' }),
+  (req, res) => {
+    res.send('Authentication Successful!');
+  }
+);
+
+// Start the server
+app.listen(3000, () => {
+  console.log('Server running on http://localhost:3000');
+});
+```
+
+---
 
 ### Authenticate Requests
 
-Use `passport.authenticate()`, specifying the `'keycloak'` strategy, to authenticate requests.
+Use `passport.authenticate()` to authenticate incoming requests. Refer to the examples for detailed implementations.
 
-```javascript
-app.get('/auth/keycloak',
-  passport.authenticate('keycloak', { scope: ['profile'] }));
-
-app.get('/auth/keycloak/callback', 
-  passport.authenticate('keycloak', { failureRedirect: '/login' }),
-  (req, res) => {
-    res.redirect('/');
-  });
-```
+---
 
 ### How to Get Roles
 
@@ -102,13 +178,9 @@ To include roles in the UserInfo response:
    - Token Claim Name: `roles.resource_access.${client_id}.roles`
    - Add to UserInfo: `enabled`.
 
+---
+
 ## Development
-
-### Devcontainer Support
-
-This project includes a `.devcontainer/devcontainer.json` file for a streamlined development experience. Features include:
-- Seamless communication between the devcontainer and Keycloak container via a shared Docker network.
-- A custom Node.js environment with PNPM pre-installed.
 
 ### Integration Tests
 
@@ -126,11 +198,7 @@ The integration tests validate the complete OpenID Connect flow:
   pnpm run test:integration
   ```
 
-The test environment is fully configurable via `test/.env.test`. The integration tests rely on the mock server to simulate complete auth flows.
-
-## Motivation
-
-This project reflects my interest in exploring Keycloak and building tools to simplify its usage. By modernizing this library, I wanted to ensure developers can easily integrate it into their workflows. And when I’m not working on projects like this, I write about these topics on my blog: [blog.brakmic.com](https://blog.brakmic.com).
+---
 
 ## License
 
