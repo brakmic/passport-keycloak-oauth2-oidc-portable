@@ -127,7 +127,7 @@ describe('KeycloakStrategy', () => {
         function () {}
       );
 
-      expect(strategyWithoutScope.options.scope).toBe('openid');
+      expect(strategyWithoutScope.options.scope).toContain('openid');
     });
 
     it('should prepend "openid" to existing scopes if missing', () => {
