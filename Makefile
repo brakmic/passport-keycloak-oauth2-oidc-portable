@@ -19,8 +19,8 @@ test-integration:
 
 test-package:
 	@echo "Running package tests..."
-	${NPM} run test-package
+	${NPM} run test:package
 
 test-strategy:
 	@echo "Running strategy tests..."
-	${NPM} run test-strategy
+	${NPM} run test:strategy
