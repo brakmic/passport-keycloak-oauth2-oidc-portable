@@ -30,3 +30,6 @@ npm-debug.log
 
 # Users Environment Variables
 .lock-wscript
+
+# puppeteeer 
+screenshots/
