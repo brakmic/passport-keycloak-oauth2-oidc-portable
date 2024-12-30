@@ -1,5 +1,5 @@
 {
-  "name": "devcontainer",
+  "name": "Passport-Keycloak-OAuth2-OIDC-portable",
   "image": "brakmic/jsdev-docker:latest",
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/host_workspace,type=bind,consistency=cached",
