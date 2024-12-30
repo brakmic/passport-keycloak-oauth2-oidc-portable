@@ -1,5 +1,5 @@
 {
-  "name": "Passport-KC-OAuth-OIDC DevContainer",
+  "name": "devcontainer",
   "image": "brakmic/jsdev-docker:latest",
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/host_workspace,type=bind,consistency=cached",
@@ -17,7 +17,9 @@
     "source=${localWorkspaceFolder}/.devcontainer/setup-workspace.mjs,target=/workspace/.devcontainer/setup-workspace.mjs,type=bind",
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
-  "forwardPorts": [8080],
+  "forwardPorts": [8080, 9000],
+  "initializeCommand": "docker network inspect devnetwork >/dev/null 2>&1 || docker network create devnetwork",
+  "runArgs": ["--network=devnetwork"],
   "postCreateCommand": "node /workspace/.devcontainer/setup-workspace.mjs && ln -sf /workspace/dev.code-workspace /home/jsdev/.vscode-server/dev.code-workspace",
   "remoteUser": "jsdev",
   "containerEnv": {
