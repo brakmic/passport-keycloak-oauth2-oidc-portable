@@ -33,3 +33,5 @@ npm-debug.log
 
 # puppeteeer 
 screenshots/
+
+.pnpm-store/
