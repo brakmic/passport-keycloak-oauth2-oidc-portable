@@ -17,7 +17,13 @@
     "source=${localWorkspaceFolder}/.devcontainer/setup-workspace.mjs,target=/workspace/.devcontainer/setup-workspace.mjs,type=bind",
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
-  "forwardPorts": [8080, 9000],
+  "forwardPorts": [
+    8080, // keycloak admin console
+    9000, // keycloak health reports
+    3000, // for testing
+    3001, // for testing
+    3002  // for testing
+  ],
   "initializeCommand": "docker network inspect devnetwork >/dev/null 2>&1 || docker network create devnetwork",
   "runArgs": ["--network=devnetwork"],
   "postCreateCommand": "node /workspace/.devcontainer/setup-workspace.mjs && ln -sf /workspace/dev.code-workspace /home/jsdev/.vscode-server/dev.code-workspace",
