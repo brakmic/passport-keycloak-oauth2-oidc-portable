@@ -47,6 +47,7 @@
     "express-session": "^1.18.1",
     "globals": "^15.14.0",
     "jest": "^29.7.0",
+    "jest-resolve": "^29.7.0",
     "jsonwebtoken": "^9.0.2",
     "make-node": "^0.4.6",
     "openid-client": "^5.1.0",
