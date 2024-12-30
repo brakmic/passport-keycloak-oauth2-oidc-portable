@@ -1,21 +1,24 @@
 const express = require('express');
 const session = require('express-session');
 const axios = require('axios');
-const jwt = require('jsonwebtoken');
 const EventEmitter = require('events');
+const { mockServer: mockConfig, keycloak: keycloakConfig } = require('./config'); // Import configuration
+const yargs = require('yargs');
 
 class MockServer extends EventEmitter {
   constructor(options = {}) {
     super();
-    this.port = options.port || 3000;
+    this.port = options.port || mockConfig.port;
     this.callbackPath = options.callbackPath || '/callback';
     this.tokenEndpoint = options.tokenEndpoint || '/token';
 
-    this.clientId = options.clientId || 'test-client';
+    this.clientId = options.clientId || keycloakConfig.clientId;
     this.clientSecret = options.clientSecret || null;
-    this.redirectUri = options.redirectUri || `http://localhost:${this.port}/callback`;
-    this.authServerURL = options.authServerURL;
-    this.realm = options.realm;
+    this.redirectUri = options.redirectUri || `${mockConfig.protocol}://${mockConfig.host}:${this.port}/callback`;
+    this.authServerURL = options.authServerURL || `${keycloakConfig.protocol}://${keycloakConfig.host}:${keycloakConfig.port}`;
+    this.realm = options.realm || keycloakConfig.realm;
+
+    // Construct Keycloak endpoints
     this.realKeycloakTokenEndpoint = `${this.authServerURL}/realms/${this.realm}/protocol/openid-connect/token`;
     this.realKeycloakUserInfoEndpoint = `${this.authServerURL}/realms/${this.realm}/protocol/openid-connect/userinfo`;
 
@@ -27,20 +30,29 @@ class MockServer extends EventEmitter {
   }
 
   callbackHandler(req, res) {
-    const { code } = req.query;
-
+    const { code, state } = req.query;
+    const redirectUrl = state ? JSON.parse(state).redirectUrl : null;
+  
     console.log('Callback received with query:', req.query);
-
+  
     if (!code) {
       res.status(400).send('Missing authorization code.');
       return;
     }
-
+  
     console.log(`Authorization code received from Keycloak: ${code}`);
     this.emit('code_received', code);
-
-    res.send('Authentication successful! You can close this window.');
+  
+    if (redirectUrl) {
+      console.log(`Redirecting to: ${redirectUrl}`);
+      res.redirect(redirectUrl); // Ensure single redirection
+    } else {
+      console.warn('No redirectUrl provided, finalizing authentication here.');
+      res.send('Authentication successful! You can close this window.');
+    }
   }
+  
+  
 
   async tokenHandler(req, res) {
     console.log('--- Token Request Received ---');
@@ -103,7 +115,7 @@ class MockServer extends EventEmitter {
       this.app.post(this.tokenEndpoint, this.tokenHandler.bind(this));
 
       this.server = this.app.listen(this.port, () => {
-        console.log(`Mock server running at http://localhost:${this.port}`);
+        console.log(`Mock server running at ${mockConfig.protocol}://${mockConfig.host}:${this.port}`);
         resolve();
       });
 
@@ -123,19 +135,20 @@ class MockServer extends EventEmitter {
 }
 
 if (require.main === module) {
-  const yargs = require('yargs');
+  // Parse command-line arguments
   const argv = yargs
-    .option('port', { alias: 'p', type: 'number', default: 3000 })
-    .option('callbackPath', { alias: 'c', type: 'string', default: '/callback' })
-    .option('tokenEndpoint', { alias: 't', type: 'string', default: '/token' })
-    .option('authServerURL', { alias: 'a', type: 'string', demandOption: true })
-    .option('realm', { alias: 'r', type: 'string', demandOption: true })
-    .option('clientId', { alias: 'client', type: 'string', default: 'test-client' })
-    .option('clientSecret', { alias: 'secret', type: 'string', default: null })
-    .option('redirectUri', { alias: 'redirect', type: 'string', default: 'http://localhost:3000/callback' })
+    .option('port', { alias: 'p', type: 'number', description: 'Port for the mock server' })
+    .option('callbackPath', { alias: 'c', type: 'string', description: 'Callback path' })
+    .option('tokenEndpoint', { alias: 't', type: 'string', description: 'Token endpoint path' })
+    .option('authServerURL', { alias: 'a', type: 'string', description: 'Keycloak authorization server URL' })
+    .option('realm', { alias: 'r', type: 'string', description: 'Keycloak realm' })
+    .option('clientId', { alias: 'client', type: 'string', description: 'Keycloak client ID' })
+    .option('clientSecret', { alias: 'secret', type: 'string', description: 'Keycloak client secret' })
+    .option('redirectUri', { alias: 'redirect', type: 'string', description: 'Redirect URI' })
     .help()
     .argv;
 
+  // Create and start the mock server
   const server = new MockServer(argv);
 
   server.start().then(() => console.log('Mock server started successfully.'));
