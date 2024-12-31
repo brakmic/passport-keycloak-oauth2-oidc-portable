@@ -1,5 +1,3 @@
-// File: eslint.config.mjs
-
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import jestPlugin from "eslint-plugin-jest";
