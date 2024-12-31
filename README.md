@@ -237,6 +237,8 @@ Integration tests validate the complete OpenID Connect flow, ensuring that authe
 
    This command executes the integration tests, which utilize the mock server to simulate authentication flows.
 
+    ![integration_tests](./assets/images/integration_tests.png)
+
 #### 2. Running Public Client
 
 The public client example demonstrates how to authenticate using the public client configuration with Keycloak.
@@ -271,6 +273,8 @@ The public client example demonstrates how to authenticate using the public clie
    **Explanation:**
    - **`--clientId test-client`:** Specifies the Keycloak client ID to use.
    - **`--authServerUrl http://keycloak:8080`:** Points to the Keycloak server's URL within the devcontainer.
+
+   ![public_client](./assets/images/public_client.png)
 
 ## Additional Information
 
