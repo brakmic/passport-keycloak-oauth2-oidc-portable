@@ -79,7 +79,7 @@ describe('KeycloakStrategy Integration Tests for Public Clients', () => {
   let tokens;
   let codeVerifier; // Store the PKCE code_verifier for later use
   let server; // Express server instance
-  let serverPort = 3002; // Port for the temporary callback server
+  let serverPort = 3003; // Port for the temporary callback server
 
   // Variables to capture code and state
   let capturedCode = null;
