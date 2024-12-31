@@ -15,13 +15,13 @@ class MockServer extends EventEmitter {
 
     this.clientId = options.clientId || 'public-client';
     this.clientSecret = options.clientSecret || null;
-    this.redirectUri = options.redirectUri || `http://localhost:${this.port}${this.callbackPath}`;
-    this.authServerURL = options.authServerURL || 'http://localhost:8080';
+    this.redirectUrl = options.redirectUrl || `http://localhost:${this.port}${this.callbackPath}`;
+    this.authServerUrl = options.authServerUrl || 'http://localhost:8080';
     this.realm = options.realm || 'TestRealm';
 
    
-    this.realKeycloakTokenEndpoint = `${this.authServerURL}/realms/${this.realm}/protocol/openid-connect/token`;
-    this.realKeycloakUserInfoEndpoint = `${this.authServerURL}/realms/${this.realm}/protocol/openid-connect/userinfo`;
+    this.realKeycloakTokenEndpoint = `${this.authServerUrl}/realms/${this.realm}/protocol/openid-connect/token`;
+    this.realKeycloakUserInfoEndpoint = `${this.authServerUrl}/realms/${this.realm}/protocol/openid-connect/userinfo`;
 
     this.app = express();
     this.server = null;
@@ -45,7 +45,7 @@ class MockServer extends EventEmitter {
     });
 
    
-    console.log(`Keycloak Auth Server URL: ${this.authServerURL}`);
+    console.log(`Keycloak Auth Server URL: ${this.authServerUrl}`);
   }
 
   async callbackHandler(req, res) {
@@ -88,7 +88,7 @@ class MockServer extends EventEmitter {
         const tokenRequestBody = {
           grant_type: 'authorization_code',
           code,
-          redirect_uri: this.redirectUri,
+          redirect_uri: this.redirectUrl,
           client_id: this.clientId,
         };
 
@@ -194,7 +194,7 @@ class MockServer extends EventEmitter {
     if (
       grant_type !== 'authorization_code' ||
       !code ||
-      redirect_uri !== this.redirectUri ||
+      redirect_uri !== this.redirectUrl ||
       client_id !== this.clientId
       // Note: code_verifier is optional based on PKCE usage
     ) {
@@ -273,11 +273,11 @@ if (require.main === module) {
     .option('port', { alias: 'p', type: 'number', description: 'Port for the mock server' })
     .option('callbackPath', { alias: 'c', type: 'string', description: 'Callback path' })
     .option('tokenEndpoint', { alias: 't', type: 'string', description: 'Token endpoint path' })
-    .option('authServerURL', { alias: 'a', type: 'string', description: 'Keycloak authorization server URL' })
+    .option('authServerUrl', { alias: 'a', type: 'string', description: 'Keycloak authorization server URL' })
     .option('realm', { alias: 'r', type: 'string', description: 'Keycloak realm' })
     .option('clientId', { alias: 'client', type: 'string', description: 'Keycloak client ID' })
     .option('clientSecret', { alias: 'secret', type: 'string', description: 'Keycloak client secret' })
-    .option('redirectUri', { alias: 'redirect', type: 'string', description: 'Redirect URI' })
+    .option('redirectUrl', { alias: 'redirect', type: 'string', description: 'Redirect URL' })
     .option('handleTokenExchange', { alias: 'h', type: 'boolean', description: 'Handle token exchange internally', default: false })
     .option('forwardCallbackUrl', { alias: 'f', type: 'string', description: 'Forward authorization code to this callback URL' })
     .help()
