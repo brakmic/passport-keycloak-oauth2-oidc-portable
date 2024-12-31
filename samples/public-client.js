@@ -52,7 +52,7 @@ const passport = require('passport');
 const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
-const { Strategy: KeycloakStrategy } = require('../lib'); // Ensure this path is correct
+const { Strategy: KeycloakStrategy } = require('../lib');
 const yargs = require('yargs');
 const crypto = require('crypto');
 
@@ -119,18 +119,18 @@ const PORT = 3002;
 // CORS configuration
 app.use(
   cors({
-    origin: 'http://localhost:3000', // Allow mock-server to interact with public-client
+    origin: 'http://localhost:3000',
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true, // Enable cookies
+    credentials: true,
   })
 );
 
 // Session configuration
 app.use(
   session({
-    name: 'public-session', // Unique session name to avoid conflicts
-    secret: 'public-client-secret', // Use a strong, unique secret in production
+    name: 'public-session',
+    secret: 'public-client-secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -180,7 +180,6 @@ app.use((req, res, next) => {
 });
 
 // Routes
-
 /**
  * Initiates authentication with Keycloak via mock-server
  */
@@ -231,7 +230,6 @@ app.get('/auth/keycloak', (req, res, next) => {
  * In this setup, the mock-server handles the callback and redirects to /redirect with user data
  */
 app.get('/auth/keycloak/callback', (req, res) => {
-  // This route may not be triggered in the current flow since mock-server handles the callback
   res.redirect('/redirect');
 });
 
