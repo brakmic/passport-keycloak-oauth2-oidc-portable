@@ -8,7 +8,7 @@ This module lets you authenticate using Keycloak in your Node.js applications. B
 
 ## Why I Did This
 
-This project wasn’t up to date for some time. I forked it to bring it into the modern world while trying out a few things I’ve been exploring with Keycloak. You can check out my blog for insights and tutorials: [blog.brakmic.com](https://blog.brakmic.com).
+[This project](https://github.com/louie007/passport-keycloak-oauth2-oidc) wasn’t up to date for some time. I forked it to bring it into the modern world while trying out a few things I’ve been exploring with Keycloak. You can check out my blog for insights and tutorials: [blog.brakmic.com](https://blog.brakmic.com).
 
 ---
 
@@ -28,6 +28,9 @@ Here’s a rundown of what I’ve added and updated:
 - **Modern Testing Framework**: Migrated from Mocha to Jest for speed and developer comfort.
 - **Efficient Package Management**: Switched to PNPM for better dependency management. Nothing against npm—it’s just that PNPM is way better, faster, and more elegant.
 - **CI-Ready Scripts**: Scripts for starting/stopping Keycloak, running tests, and linting are all in `package.json`.
+- **Scripts for Starting Mock Server in Different Scenarios**: Added two scripts located in the `scripts` folder:
+  - `run_mock_server_for_integration_tests.sh`: Starts the mock server configured for integration tests.
+  - `run_mock_server_for_public_client.sh`: Starts the mock server configured for public client usage.
 
 ---
 
@@ -54,7 +57,7 @@ Before using `passport-keycloak-oauth2-oidc-portable`, you must create a `realm`
 
 The Keycloak authentication strategy authenticates requests by delegating to your Keycloak server using the OpenID Connect (OIDC/OAuth 2.0) protocol.
 
-Options:
+**Options:**
 - `realm`: Name of your Keycloak realm (default: `master`).
 - `authServerURL`: Base URL for your realm's authorization endpoint.
 - `publicClient`: Whether the Keycloak client’s `Access Type` is `public` (default: `true`).
@@ -95,69 +98,69 @@ passport.use(
 
 This example demonstrates how to configure a public client and use a mock server to simulate the complete OpenID Connect flow.
 
-1. Start Keycloak via Docker Compose:
+1. **Start Keycloak via Docker Compose:**
 
-```bash
-sudo docker compose -f test/bootstrap/docker-compose.test.yml up -d
-```
+   ```bash
+   sudo docker compose -f test/bootstrap/docker-compose.test.yml up -d
+   ```
 
-2. Start the Mock Server:
+2. **Start the Mock Server:**
 
-```bash
-pnpm run mock-server
-```
+   ```bash
+   pnpm run mock-server
+   ```
 
-3. Example Code:
+3. **Example Code:**
 
-```javascript
-const express = require('express');
-const passport = require('passport');
-const KeyCloakStrategy = require('passport-keycloak-oauth2-oidc-portable').Strategy;
+   ```javascript
+   const express = require('express');
+   const passport = require('passport');
+   const KeyCloakStrategy = require('passport-keycloak-oauth2-oidc-portable').Strategy;
 
-const app = express();
+   const app = express();
 
-// Configure the Keycloak Strategy
-passport.use(
-  new KeyCloakStrategy(
-    {
-      clientID: 'test-client', // Replace with your clientID
-      realm: 'TestRealm',      // Replace with your realm
-      publicClient: true,
-      sslRequired: 'none',
-      authServerURL: 'http://localhost:8080', // Ensure Keycloak is running
-      callbackURL: 'http://localhost:3000/callback',
-    },
-    (accessToken, refreshToken, profile, done) => {
-      // Verify callback
-      console.log('User profile:', profile);
-      return done(null, profile);
-    }
-  )
-);
+   // Configure the Keycloak Strategy
+   passport.use(
+     new KeyCloakStrategy(
+       {
+         clientID: 'test-client', // Replace with your clientID
+         realm: 'TestRealm',      // Replace with your realm
+         publicClient: true,
+         sslRequired: 'none',
+         authServerURL: 'http://keycloak:8080', // Ensure Keycloak is running
+         callbackURL: 'http://localhost:3000/callback',
+       },
+       (accessToken, refreshToken, profile, done) => {
+         // Verify callback
+         console.log('User profile:', profile);
+         return done(null, profile);
+       }
+     )
+   );
 
-// Middleware for passport
-app.use(passport.initialize());
+   // Middleware for passport
+   app.use(passport.initialize());
 
-// Route to initiate authentication
-app.get(
-  '/auth/keycloak',
-  passport.authenticate('keycloak', { scope: ['openid', 'profile', 'email'] })
-);
+   // Route to initiate authentication
+   app.get(
+     '/auth/keycloak',
+     passport.authenticate('keycloak', { scope: ['openid', 'profile', 'email'] })
+   );
 
-// Callback route
-app.get(
-  '/auth/keycloak/callback',
-  passport.authenticate('keycloak', { failureRedirect: '/login' }),
-  (req, res) => {
-    res.send('Authentication Successful!');
-  }
-);
+   // Callback route
+   app.get(
+     '/auth/keycloak/callback',
+     passport.authenticate('keycloak', { failureRedirect: '/login' }),
+     (req, res) => {
+       res.send('Authentication Successful!');
+     }
+   );
 
-// Start the server
-app.listen(3000, () => {
-  console.log('Server running on http://localhost:3000');
-});
-```
+   // Start the server
+   app.listen(3000, () => {
+     console.log('Server running on http://localhost:3000');
+   });
+   ```
 
 ---
 
@@ -170,35 +173,116 @@ Use `passport.authenticate()` to authenticate incoming requests. Refer to the ex
 ### How to Get Roles
 
 To include roles in the UserInfo response:
+
 1. Navigate to **Clients Scopes -> Roles -> Settings** in Keycloak.
 2. Enable **Include In Token Scope**.
 3. Configure Role Mappers for the client:
-   - Mapper Type: `User Client Role`
-   - Multivalued: `true`
-   - Token Claim Name: `roles.resource_access.${client_id}.roles`
-   - Add to UserInfo: `enabled`.
+   - **Mapper Type:** `User Client Role`
+   - **Multivalued:** `true`
+   - **Token Claim Name:** `roles.resource_access.${client_id}.roles`
+   - **Add to UserInfo:** `enabled`.
 
 ---
 
 ## Development
 
-### Integration Tests
+### Scripts for Starting Mock Server in Different Scenarios
 
-The integration tests validate the complete OpenID Connect flow:
-- Start Keycloak with:
-  ```bash
-  sudo docker compose -f test/bootstrap/docker-compose.test.yml up -d
-  ```
-- Run the mock server:
-  ```bash
-  pnpm run mock-server
-  ```
-- Execute tests:
-  ```bash
-  pnpm run test:integration
-  ```
+To facilitate different testing and usage scenarios, two scripts have been added to the `scripts` subfolder:
 
----
+1. **`run_mock_server_for_integration_tests.sh`:** Configures and starts the mock server for integration testing.
+2. **`run_mock_server_for_public_client.sh`:** Configures and starts the mock server for public client usage.
+
+**Make Scripts Executable:**
+
+Ensure that the scripts have execute permissions. You can set this by running:
+
+```bash
+chmod +x scripts/run_mock_server_for_integration_tests.sh
+chmod +x scripts/run_mock_server_for_public_client.sh
+```
+
+#### 1. Running Integration Tests
+
+Integration tests validate the complete OpenID Connect flow, ensuring that authentication and authorization mechanisms work as expected.
+
+**Steps:**
+
+1. **Start the Mock Server for Integration Tests:**
+
+   ```bash
+   ./scripts/run_mock_server_for_integration_tests.sh
+   ```
+
+   **Script Contents (`run_mock_server_for_integration_tests.sh`):**
+
+   ```bash
+   #!/usr/bin/env bash
+
+   pnpm start:mock-server --client test-client --realm TestRealm --authServerUrl http://keycloak:8080 \
+   --handleTokenExchange false --forwardCallbackUrl http://localhost:3002/sink \
+   --redirectUrl http://localhost:3003/sink
+   ```
+
+   **Explanation:**
+   - **`--handleTokenExchange false`:** The mock server forwards the token exchange process instead of handling it internally.
+   - **`--forwardCallbackUrl http://localhost:3002/sink`:** Specifies where to forward the authorization code.
+   - **`--redirectUrl http://localhost:3003/sink`:** Sets the redirect URL after handling the token exchange.
+
+2. **Run Integration Tests:**
+
+   ```bash
+   pnpm test:integration
+   ```
+
+   This command executes the integration tests, which utilize the mock server to simulate authentication flows.
+
+#### 2. Running Public Client
+
+The public client example demonstrates how to authenticate using the public client configuration with Keycloak.
+
+**Steps:**
+
+1. **Start the Mock Server for Public Client:**
+
+   ```bash
+   ./scripts/run_mock_server_for_public_client.sh
+   ```
+
+   **Script Contents (`run_mock_server_for_public_client.sh`):**
+
+   ```bash
+   #!/usr/bin/env bash
+
+   pnpm start:mock-server --client test-client --realm TestRealm --authServerUrl http://keycloak:8080 \
+   --handleTokenExchange true --redirectUrl http://localhost:3000/callback
+   ```
+
+   **Explanation:**
+   - **`--handleTokenExchange true`:** The mock server handles the token exchange process internally.
+   - **`--redirectUrl http://localhost:3000/callback`:** Sets the redirect URL after successful authentication.
+
+2. **Run the Public Client:**
+
+   ```bash
+   node samples/public-client.js --clientId test-client --authServerUrl http://keycloak:8080
+   ```
+
+   **Explanation:**
+   - **`--clientId test-client`:** Specifies the Keycloak client ID to use.
+   - **`--authServerUrl http://keycloak:8080`:** Points to the Keycloak server's URL within the devcontainer.
+
+## Additional Information
+
+### Accessing Keycloak from Devcontainer
+
+Due to network configurations within the devcontainer, `http://localhost:8080` is inaccessible. Instead, you should use `http://keycloak:8080` to interact with the Keycloak server from within the devcontainer. This setup allows seamless communication between services running inside the devcontainer and the Keycloak server running in a separate Docker container.
+
+**Key Points:**
+
+- **Hostname Configuration:**
+  - The Keycloak server's hostname is set to `keycloak`, ensuring that services within the devcontainer can resolve it correctly.
+  - `KC_HOSTNAME_STRICT` is set to `false` to allow external access via `http://localhost:8080` from your host machine's browser.
 
 ## License
 
