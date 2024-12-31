@@ -1,5 +1,3 @@
-// mock-server.js
-
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -12,16 +10,16 @@ class MockServer extends EventEmitter {
     this.port = options.port || 3000;
     this.callbackPath = options.callbackPath || '/callback';
     this.tokenEndpoint = options.tokenEndpoint || '/token';
-    this.forwardCallbackUrl = options.forwardCallbackUrl || null; // New configuration
-    this.handleTokenExchange = options.handleTokenExchange || false; // New configuration
+    this.forwardCallbackUrl = options.forwardCallbackUrl || null;
+    this.handleTokenExchange = options.handleTokenExchange || false;
 
-    this.clientId = options.clientId || 'public-client'; // Ensure this matches your clientId
-    this.clientSecret = options.clientSecret || null; // Null for public clients
+    this.clientId = options.clientId || 'public-client';
+    this.clientSecret = options.clientSecret || null;
     this.redirectUri = options.redirectUri || `http://localhost:${this.port}${this.callbackPath}`;
-    this.authServerURL = options.authServerURL || 'http://localhost:8080'; // Update to 'http://keycloak:8080'
+    this.authServerURL = options.authServerURL || 'http://localhost:8080';
     this.realm = options.realm || 'TestRealm';
 
-    // Construct Keycloak endpoints without '/auth'
+   
     this.realKeycloakTokenEndpoint = `${this.authServerURL}/realms/${this.realm}/protocol/openid-connect/token`;
     this.realKeycloakUserInfoEndpoint = `${this.authServerURL}/realms/${this.realm}/protocol/openid-connect/userinfo`;
 
@@ -33,29 +31,29 @@ class MockServer extends EventEmitter {
     this.app.use(express.json());
     this.app.use(
       cors({
-        origin: 'http://localhost:3002', // Allow requests from the public-client origin
+        origin: 'http://localhost:3002',
         methods: ['GET', 'POST'],
         allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true,
       })
     );
 
-    // Add general logging middleware
+    
     this.app.use((req, res, next) => {
       console.log(`Mock Server received request: ${req.method} ${req.url}`);
       next();
     });
 
-    // Log the Keycloak Auth Server URL
+   
     console.log(`Keycloak Auth Server URL: ${this.authServerURL}`);
   }
 
   async callbackHandler(req, res) {
     const { code, state, error, error_description } = req.query;
-    let redirectUrl = 'http://localhost:3002/redirect'; // Default redirect URL
+    let redirectUrl = 'http://localhost:3002/redirect';
     let code_verifier = null;
 
-    // Handle authentication errors returned by Keycloak
+   
     if (error) {
       console.error(`Error during authentication: ${error} - ${error_description}`);
       return res.status(400).send(`Authentication Error: ${error_description}`);
@@ -71,7 +69,7 @@ class MockServer extends EventEmitter {
       // If parsing fails, assume state is a plain string (non-PKCE flow)
       console.error('Error parsing state parameter:', error);
       console.log('State is not JSON. Using default redirectUrl:', redirectUrl);
-      // Optionally, log the state value
+
       console.log('State:', state);
     }
 
@@ -246,7 +244,6 @@ class MockServer extends EventEmitter {
 
   start() {
     return new Promise((resolve, reject) => {
-      // Define routes
       this.app.get(this.callbackPath, this.callbackHandler.bind(this));
       this.app.post(this.tokenEndpoint, this.tokenHandler.bind(this));
 
@@ -272,7 +269,6 @@ class MockServer extends EventEmitter {
 }
 
 if (require.main === module) {
-  // Parse command-line arguments
   const argv = yargs
     .option('port', { alias: 'p', type: 'number', description: 'Port for the mock server' })
     .option('callbackPath', { alias: 'c', type: 'string', description: 'Callback path' })

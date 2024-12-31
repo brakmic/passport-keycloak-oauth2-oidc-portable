@@ -47,8 +47,8 @@ const { Issuer, generators } = require('openid-client');
 const puppeteer = require('puppeteer');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
-const express = require('express'); // Added for callback server
-const http = require('http'); // Added for callback server
+const express = require('express');
+const http = require('http');
 
 const path = require('path');
 const dotenv = require('dotenv');
@@ -144,13 +144,13 @@ describe('KeycloakStrategy Integration Tests for Public Clients', () => {
     const keycloakIssuer = await Issuer.discover(discoveryUrl);
     const client = new keycloakIssuer.Client({
       client_id: CLIENT_ID,
-      redirect_uris: [`http://localhost:${serverPort}/sink`], // Ensure this matches your temporary server's /sink URL
+      redirect_uris: [`http://localhost:${serverPort}/sink`],
       response_types: ['code'],
     });
 
     // **Generate PKCE Code Verifier and Challenge**
-    codeVerifier = generators.codeVerifier(); // Generate PKCE code verifier
-    const codeChallenge = generators.codeChallenge(codeVerifier); // Generate code challenge
+    codeVerifier = generators.codeVerifier();
+    const codeChallenge = generators.codeChallenge(codeVerifier);
 
     // **Define the Redirect URL**
     const redirectUrl = `http://localhost:${serverPort}/sink`;
@@ -160,7 +160,7 @@ describe('KeycloakStrategy Integration Tests for Public Clients', () => {
       redirectUrl: redirectUrl,
       code_verifier: codeVerifier,
     };
-    const state = JSON.stringify(statePayload); // Serialize as JSON string
+    const state = JSON.stringify(statePayload);
 
     // **Generate Authorization URL with PKCE Parameters and Embedded State**
     const authUrl = client.authorizationUrl({
@@ -182,12 +182,12 @@ describe('KeycloakStrategy Integration Tests for Public Clients', () => {
     debugLog('Navigated to Keycloak login page.');
 
     // **Submit Login Form**
-    await page.type('#username', 'test-user'); // Replace 'test-user' with a valid username
-    await page.type('#password', 'password'); // Replace 'password' with the correct password
+    await page.type('#username', 'test-user');
+    await page.type('#password', 'password');
 
     // **Click Submit and Wait for Navigation**
     await Promise.all([
-      page.click('button[type="submit"]'), // Update selector if different
+      page.click('button[type="submit"]'),
       // The 'authorizationCodePromise' will resolve upon navigation to /sink with code
     ]);
 
