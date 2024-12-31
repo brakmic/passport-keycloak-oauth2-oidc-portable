@@ -6,6 +6,8 @@ services:
     container_name: keycloak-demo
     environment:
       KC_DB: dev-file
+      KC_HOSTNAME: keycloak
+      KC_HOSTNAME_STRICT: false  # allow http://localhost:8080 calls via browser
       KC_HEALTH_ENABLED: true
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
