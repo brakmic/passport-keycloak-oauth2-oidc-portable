@@ -1,7 +1,7 @@
 {
   "name": "passport-keycloak-oauth2-oidc-portable",
-  "version": "1.0.5",
-  "description": "A Passport.js strategy for authenticating with Keycloak using the OAuth2/OIDC API",
+  "version": "2.0.0",
+  "description": "A Passport.js strategy for authenticating with Keycloak using the OAuth2/OIDC API (portable version)",
   "main": "./lib/index.js",
   "scripts": {
     "pretest:integration": "pnpx puppeteer browsers install chrome",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/brakmic/passport-keycloak-oauth2-oidc.git"
+    "url": "git+https://github.com/brakmic/passport-keycloak-oauth2-oidc-potable.git"
   },
   "keywords": [
     "passport",
@@ -24,12 +24,21 @@
     "oauth2",
     "oidc"
   ],
-  "author": "Louis Bao",
+  "author": {
+    "name": "Harris Brakmic",
+    "url": "https://github.com/brakmic"
+  },
+  "contributors": [
+    {
+      "name": "Louis Bao",
+      "url": "https://github.com/louie007"
+    }
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/louie007/passport-keycloak-oauth2-oidc/issues"
+    "url": "https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/issues"
   },
-  "homepage": "https://github.com/louie007/passport-keycloak-oauth2-oidc#readme",
+  "homepage": "https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable#readme",
   "dependencies": {
     "passport-oauth2": "^1.8.0"
   },
