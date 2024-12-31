@@ -23,9 +23,12 @@
  *    - After successful login, Keycloak redirects back to the application (`http://localhost:3001/auth/keycloak/callback`).
  *    - This application then processes the user's profile and provides access to the application.
  *
+ * 4. **Initiate Authentication**:
+ *    - Open your browser and navigate to [http://keycloak:8080/auth/keycloak](http://keycloak:8080/auth/keycloak) to start the authentication process.
+ *
  * ### Customization
- * Users can override default settings for `authServerURL`, `clientId`, `clientSecret`, `callbackUrl`, and `realm` via command-line flags.
- * Example: `node confidential-client.js --authServerURL http://custom-auth-server:8080 --clientId my-client --clientSecret my-secret`
+ * Users can override default settings for `authServerUrl`, `clientId`, `clientSecret`, `callbackUrl`, and `realm` via command-line flags.
+ * Example: `node confidential-client.js --authServerUrl http://custom-auth-server:8080 --clientId my-client --clientSecret my-secret`
  *
  * If no flags are provided, the script defaults to:
  * - `authServerURL`: http://localhost:8080
@@ -43,7 +46,7 @@ const yargs = require('yargs');
 
 // Parse command-line flags
 const argv = yargs
-  .option('authServerURL', { alias: 'a', type: 'string', default: 'http://localhost:8080', description: 'Keycloak Auth Server URL' })
+  .option('authServerUrl', { alias: 'auth', type: 'string', default: 'http://keycloak:8080', description: 'Keycloak Auth Server URL' })
   .option('clientId', { alias: 'client', type: 'string', default: 'confidential-client', description: 'Keycloak Client ID' })
   .option('clientSecret', { alias: 'secret', type: 'string', default: 'BTwijTL7cHax9gGHWEYBKU9blFROSbZW', description: 'Keycloak Client Secret' })
   .option('callbackUrl', { alias: 'callback', type: 'string', default: 'http://localhost:3001/auth/keycloak/callback', description: 'Callback URL for Keycloak' })
@@ -69,10 +72,10 @@ passport.use(
   new KeycloakStrategy(
     {
       realm: argv.realm,
-      authServerURL: argv.authServerURL,
-      clientId: argv.clientId,
+      authServerURL: argv.authServerUrl,
+      clientID: argv.clientId,
       clientSecret: argv.clientSecret,
-      callbackUrl: argv.callbackUrl,
+      callbackURL: argv.callbackUrl,
       sslRequired: 'none',
     },
     (accessToken, refreshToken, profile, done) => {
@@ -108,9 +111,10 @@ app.get(
 app.listen(PORT, () => {
   console.log(`Confidential Client running on http://localhost:${PORT}`);
   console.log(`Using configuration:`);
-  console.log(`  Auth Server URL: ${argv.authServerURL}`);
+  console.log(`  Auth Server URL: ${argv.authServerUrl}`);
   console.log(`  Client ID: ${argv.clientId}`);
   console.log(`  Client Secret: ${argv.clientSecret}`);
   console.log(`  Callback URL: ${argv.callbackUrl}`);
   console.log(`  Realm: ${argv.realm}`);
+  console.log(`\nTo start the authentication process, navigate to http://localhost:3001/auth/keycloak`);
 });
