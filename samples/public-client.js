@@ -38,13 +38,13 @@
  *    - The mock server handles the token exchange, and this script processes the user's profile.
  *
  * ### Customization
- * Users can override default settings for `authServerURL`, `clientID`, `callbackURL`, `realm`, and enable PKCE via command-line flags.
- * Example: `node public-client.js --authServerURL http://custom-auth-server:8080 --clientID my-client --use-pkce`
+ * Users can override default settings for `authServerUrl`, `clientId`, `callbackUrl`, `realm`, and enable PKCE via command-line flags.
+ * Example: `node public-client.js --authServerUrl http://custom-auth-server:8080 --clientId my-client --use-pkce`
  *
  * If no flags are provided, the script defaults to:
- * - `authServerURL`: http://localhost:8080
- * - `clientID`: public-client
- * - `callbackURL`: http://localhost:3000/callback
+ * - `authServerUrl`: http://localhost:8080
+ * - `clientId`: public-client
+ * - `callbackUrl`: http://localhost:3000/callback
  * - `realm`: TestRealm
  * - `redirectUrl`: http://localhost:3002/redirect
  */
@@ -58,20 +58,20 @@ const crypto = require('crypto');
 
 // Parse command-line flags
 const argv = yargs
-  .option('authServerURL', {
-    alias: 'a',
+  .option('authServerUrl', {
+    alias: 'auth',
     type: 'string',
     default: 'http://localhost:8080',
     description: 'Keycloak Auth Server URL',
   })
-  .option('clientID', {
-    alias: 'c',
+  .option('clientId', {
+    alias: 'client',
     type: 'string',
     default: 'public-client',
     description: 'Keycloak Client ID',
   })
-  .option('callbackURL', {
-    alias: 'u',
+  .option('callbackUrl', {
+    alias: 'callback',
     type: 'string',
     default: 'http://localhost:3000/callback',
     description: 'Callback URL for Keycloak',
@@ -89,7 +89,7 @@ const argv = yargs
     description: 'Redirect URL after successful authentication',
   })
   .option('use-pkce', {
-    alias: 'p',
+    alias: 'pkce',
     type: 'boolean',
     default: false,
     description: 'Enable PKCE (Proof Key for Code Exchange)',
@@ -146,10 +146,10 @@ passport.use(
   new KeycloakStrategy(
     {
       realm: argv.realm,
-      authServerURL: argv.authServerURL,
-      clientID: argv.clientID,
+      authServerURL: argv.authServerUrl,
+      clientID: argv.clientId,
       publicClient: true,
-      callbackURL: argv.callbackURL,
+      callbackURL: argv.callbackUrl,
       sslRequired: 'none',
     },
     (accessToken, refreshToken, profile, done) => {
@@ -300,9 +300,9 @@ app.get('/login', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Public Client running on http://localhost:${PORT}`);
   console.log(`Using configuration:`);
-  console.log(`  Auth Server URL: ${argv.authServerURL}`);
-  console.log(`  Client ID: ${argv.clientID}`);
-  console.log(`  Callback URL: ${argv.callbackURL}`);
+  console.log(`  Auth Server URL: ${argv.authServerUrl}`);
+  console.log(`  Client ID: ${argv.clientId}`);
+  console.log(`  Callback URL: ${argv.callbackUrl}`);
   console.log(`  Realm: ${argv.realm}`);
   console.log(`  Redirect URL: ${argv.redirectUrl}`);
   console.log(`  PKCE Enabled: ${argv['use-pkce']}`);
