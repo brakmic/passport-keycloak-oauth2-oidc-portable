@@ -22,7 +22,8 @@
     9000, // keycloak health reports
     3000, // for testing
     3001, // for testing
-    3002  // for testing
+    3002, // for testing
+    3003  // for testing
   ],
   "initializeCommand": "docker network inspect devnetwork >/dev/null 2>&1 || docker network create devnetwork",
   "runArgs": ["--network=devnetwork"],
