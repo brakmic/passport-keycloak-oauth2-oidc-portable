@@ -290,4 +290,4 @@ Due to network configurations within the devcontainer, `http://localhost:8080` i
 
 ## License
 
-[The MIT License](http://opensource.org/licenses/MIT)
+[MIT](./LICENSE)
