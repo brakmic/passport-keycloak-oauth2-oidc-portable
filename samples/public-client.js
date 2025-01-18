@@ -55,6 +55,7 @@ const cors = require('cors');
 const { Strategy: KeycloakStrategy } = require('../lib');
 const yargs = require('yargs');
 const crypto = require('crypto');
+const path = require('path');
 
 // Parse command-line flags
 const argv = yargs
@@ -126,6 +127,15 @@ app.use(
   })
 );
 
+// View Engine
+const appRoot = path.resolve(__dirname);
+app.set('views', path.join(appRoot, 'views'));
+app.use(express.static(path.join(appRoot, 'public')));
+app.engine('html', require('ejs').renderFile);
+app.set('view engine', 'html');
+
+console.log('Static files served from:', path.join(appRoot, 'public'));
+
 // Session configuration
 app.use(
   session({
@@ -192,14 +202,13 @@ app.get('/auth/keycloak', (req, res, next) => {
     code_verifier = generateCodeVerifier();
     code_challenge = generateCodeChallenge(code_verifier);
 
-    // Store code_verifier in session for later use
+    // Store code_verifier in the session
     req.session.code_verifier = code_verifier;
     console.log('PKCE is enabled. Generated code_verifier and code_challenge.');
   } else {
     console.log('PKCE is disabled. Proceeding without PKCE.');
   }
 
-  // Construct state with redirectUrl and optionally code_verifier
   const statePayload = {
     redirectUrl: argv.redirectUrl,
   };
@@ -209,21 +218,23 @@ app.get('/auth/keycloak', (req, res, next) => {
   }
 
   const state = JSON.stringify(statePayload);
+
   console.log('Starting authentication with state:', state);
 
-  // Initiate authentication with PKCE parameters if enabled
   const authOptions = {
     scope: ['openid', 'profile', 'email'],
-    state, // Pass the redirectUrl in the state
+    state,
+    ...(argv['use-pkce'] && {
+      code_challenge,
+      code_challenge_method: 'S256',
+    }),
   };
 
-  if (argv['use-pkce']) {
-    authOptions.code_challenge = code_challenge;
-    authOptions.code_challenge_method = 'S256';
-  }
+  console.log('Authorization options:', authOptions);
 
   passport.authenticate('keycloak', authOptions)(req, res, next);
 });
+
 
 /**
  * Callback route handled by KeycloakStrategy (passport)
@@ -278,15 +289,26 @@ app.get('/redirect', (req, res, next) => {
  * Protected route that requires authentication
  */
 app.get('/profile', (req, res) => {
-  console.log('Accessing /profile route');
-  console.log(`Current Session ID: ${req.sessionID}`);
-  console.log(`Authenticated User: ${JSON.stringify(req.user)}`);
-
   if (!req.isAuthenticated()) {
     console.error('User is not authenticated.');
     return res.status(401).send('Unauthorized: User not authenticated.');
   }
-  res.send(`Profile Page: ${JSON.stringify(req.user)}`);
+
+  const userProfile = {
+    sub: req.user.sub,
+    email_verified: req.user.email_verified,
+    name: req.user.name,
+    preferred_username: req.user.preferred_username,
+    given_name: req.user.given_name,
+    family_name: req.user.family_name,
+    email: req.user.email,
+  };
+
+  console.log('Accessing /profile route');
+  console.log(`Current Session ID: ${req.sessionID}`);
+  console.log(`Authenticated User: ${JSON.stringify(userProfile.given_name)}`);
+
+  res.render('profile', { userProfile });
 });
 
 /**
