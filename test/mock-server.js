@@ -52,59 +52,66 @@ class MockServer extends EventEmitter {
     const { code, state, error, error_description } = req.query;
     let redirectUrl = 'http://localhost:3002/redirect';
     let code_verifier = null;
+  
+    // Log received query parameters for debugging
+    console.log('Callback request received:', req.query);
 
-   
+    // Ensure PKCE parameters are logged
+    console.log('PKCE Parameters:', {
+      code_challenge: req.query.code_challenge,
+      code_challenge_method: req.query.code_challenge_method,
+    });
+  
     if (error) {
       console.error(`Error during authentication: ${error} - ${error_description}`);
       return res.status(400).send(`Authentication Error: ${error_description}`);
     }
-
-    // Attempt to parse the state parameter as JSON
+  
+    // Parse the state parameter to extract redirectUrl and code_verifier
     try {
       const parsedState = JSON.parse(state);
       redirectUrl = parsedState.redirectUrl || redirectUrl;
       code_verifier = parsedState.code_verifier || null;
       console.log('Parsed state as JSON:', parsedState);
     } catch (error) {
-      // If parsing fails, assume state is a plain string (non-PKCE flow)
       console.error('Error parsing state parameter:', error);
       console.log('State is not JSON. Using default redirectUrl:', redirectUrl);
-
-      console.log('State:', state);
     }
-
+  
     if (!code) {
       console.error('Missing authorization code in callback.');
-      res.status(400).send('Missing authorization code.');
-      return;
+      return res.status(400).send('Missing authorization code.');
     }
-
+  
     console.log(`Authorization code received from Keycloak: ${code}`);
     this.emit('code_received', code);
-
+  
     if (this.handleTokenExchange) {
-      // **Handle Token Exchange Internally**
+      // Handle token exchange internally
       try {
         const tokenRequestBody = {
           grant_type: 'authorization_code',
           code,
           redirect_uri: this.redirectUrl,
           client_id: this.clientId,
+          ...(code_verifier && { code_verifier }),
         };
 
+        console.log('Forwarding token exchange with body:', tokenRequestBody);
+  
         if (this.clientSecret) {
           tokenRequestBody.client_secret = this.clientSecret;
         }
-
+  
         if (code_verifier) {
           tokenRequestBody.code_verifier = code_verifier;
           console.log('PKCE is enabled. Including code_verifier in token exchange.');
         } else {
-          console.log('PKCE is not used. Proceeding without code_verifier.');
+          console.warn('PKCE not used for this request.');
         }
-
+  
         console.log('Token Exchange Request Body:', tokenRequestBody);
-
+  
         const tokenResponse = await axios.post(
           this.realKeycloakTokenEndpoint,
           new URLSearchParams(tokenRequestBody).toString(),
@@ -112,32 +119,29 @@ class MockServer extends EventEmitter {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           }
         );
-
+  
         console.log('Token Exchange Response Data:', tokenResponse.data);
-
+  
         const { access_token } = tokenResponse.data;
-
+  
         if (!access_token) {
           throw new Error('No access_token found in token exchange response.');
         }
-
+  
         console.log('Using Access Token for User Info:', access_token);
-
-        // Retrieve user info from Keycloak
+  
         const userInfoResponse = await axios.get(this.realKeycloakUserInfoEndpoint, {
           headers: {
             Authorization: `Bearer ${access_token}`,
           },
         });
-
+  
         console.log('User Info Response Data:', userInfoResponse.data);
-
+  
         const userProfile = userInfoResponse.data;
-        console.log('User profile retrieved:', userProfile);
-
+  
         // Redirect to redirectUrl with user data
         if (redirectUrl) {
-          // Encode user data as a JSON string and then URI encode it
           const userData = encodeURIComponent(JSON.stringify(userProfile));
           const updatedState = encodeURIComponent(state);
           res.redirect(`${redirectUrl}?state=${updatedState}&user=${userData}`);
@@ -151,13 +155,12 @@ class MockServer extends EventEmitter {
         res.status(500).send('Authentication failed during token exchange.');
       }
     } else if (this.forwardCallbackUrl) {
-      // **Forward Authorization Code to Configurable Callback URL**
+      // Forward authorization code to a configurable callback URL
       try {
-        // Construct the forwarding URL with code and state
         const forwardingUrl = new URL(this.forwardCallbackUrl);
         forwardingUrl.searchParams.append('code', code);
         forwardingUrl.searchParams.append('state', state);
-
+  
         console.log(`Forwarding authorization code to: ${forwardingUrl.toString()}`);
         res.redirect(forwardingUrl.toString());
       } catch (error) {
@@ -165,10 +168,9 @@ class MockServer extends EventEmitter {
         res.status(500).send('Authentication failed during code forwarding.');
       }
     } else {
-      // **Default Behavior: Redirect with Code and State**
+      // Default behavior: Redirect with code and state
       try {
         if (redirectUrl) {
-          // Encode code and state as query parameters
           const updatedState = encodeURIComponent(state);
           const updatedCode = encodeURIComponent(code);
           res.redirect(`${redirectUrl}?state=${updatedState}&code=${updatedCode}`);
@@ -182,7 +184,7 @@ class MockServer extends EventEmitter {
         res.status(500).send('Authentication failed during redirect.');
       }
     }
-  }
+  }  
 
   async tokenHandler(req, res) {
     console.log('--- Token Request Received ---');
