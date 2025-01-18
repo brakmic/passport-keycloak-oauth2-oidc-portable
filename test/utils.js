@@ -1,5 +1,3 @@
-// File: test/utils.js
-
 const { exec } = require('child_process');
 const axios = require('axios');
 
