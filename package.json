@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/brakmic/passport-keycloak-oauth2-oidc-potable.git"
+    "url": "git+https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable.git"
   },
   "keywords": [
     "passport",
@@ -44,12 +44,14 @@
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
+    "@babel/helper-validator-identifier": "^7.25.9",
     "@babel/preset-env": "^7.26.0",
     "@eslint/js": "^9.17.0",
     "axios": "^1.7.9",
     "babel-jest": "^29.7.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
     "eslint": "^9.17.0",
     "eslint-plugin-jest": "^28.10.0",
     "express": "^4.21.2",
