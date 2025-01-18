@@ -6,6 +6,26 @@ This module lets you authenticate using Keycloak in your Node.js applications. B
 
 ---
 
+## Index
+
+1. [Why I Did This](#why-i-did-this)
+2. [What’s New in This Fork?](#whats-new-in-this-fork)
+3. [Install](#install)
+4. [Usage](#usage)
+   - [Create an Application](#create-an-application)
+   - [Configure Strategy](#configure-strategy)
+   - [Example 1: Confidential Client](#example-1-confidential-client)
+   - [Example 2: Public Client with Local Keycloak and Mock Server](#example-2-public-client-with-local-keycloak-and-mock-server)
+   - [Authenticate Requests](#authenticate-requests)
+5. [How to Get Roles](#how-to-get-roles)
+6. [Development](#development)
+   - [Scripts for Starting Mock Server in Different Scenarios](#scripts-for-starting-mock-server-in-different-scenarios)
+7. [Additional Information](#additional-information)
+   - [Accessing Keycloak from Devcontainer](#accessing-keycloak-from-devcontainer)
+8. [License](#license)
+
+---
+
 ## Why I Did This
 
 [This project](https://github.com/louie007/passport-keycloak-oauth2-oidc) wasn’t up to date for some time. I forked it to bring it into the modern world while trying out a few things I’ve been exploring with Keycloak. You can check out my blog for insights and tutorials: [blog.brakmic.com](https://blog.brakmic.com).
@@ -16,6 +36,7 @@ This module lets you authenticate using Keycloak in your Node.js applications. B
 
 Here’s a rundown of what I’ve added and updated:
 
+- **PKCE Support**: Full support for Proof Key for Code Exchange (PKCE) has been added to enhance the security of public clients.
 - **Devcontainer Support**: Full support for Visual Studio Code Dev Containers to streamline development.
 - **Keycloak via Docker Compose**: Keycloak is now effortlessly launched in its own container, accessible:
   - From the devcontainer: `http://keycloak:8080` (internal) and `http://keycloak:9000` (health/ready checks).
@@ -76,7 +97,7 @@ passport.use(
   new KeyCloakStrategy(
     {
       clientID: 'myOauthClient',
-      realm: 'MyKeyCloakRealm',
+      realm: 'MyRealm',
       publicClient: false,
       clientSecret: '6ee0f303-faef-42d7-ba8e-00cdec755c42',
       sslRequired: 'external',
@@ -94,9 +115,9 @@ passport.use(
 
 ---
 
-### Example 2: Public Client (`publicClient=true`) with Local Keycloak and Mock Server
+### Example 2: Public Client with Local Keycloak and Mock Server
 
-This example demonstrates how to configure a public client and use a mock server to simulate the complete OpenID Connect flow.
+This example demonstrates how to configure a public client and use a mock server to simulate the complete OpenID Connect flow with PKCE support.
 
 1. **Start Keycloak via Docker Compose:**
 
@@ -107,10 +128,16 @@ This example demonstrates how to configure a public client and use a mock server
 2. **Start the Mock Server:**
 
    ```bash
-   pnpm  start:mock-server
+   pnpm start:mock-server --client test-client --realm TestRealm --authServerUrl http://keycloak:8080 --handleTokenExchange true
    ```
 
-3. **Example Code:**
+3. **Run the Public Client:**
+
+   ```bash
+   node ./samples/public-client.js --authServerUrl http://keycloak:8080 --client test-client --use-pkce
+   ```
+
+4. **Example Code:**
 
    ```javascript
    const express = require('express');
@@ -131,7 +158,6 @@ This example demonstrates how to configure a public client and use a mock server
          callbackURL: 'http://localhost:3000/callback',
        },
        (accessToken, refreshToken, profile, done) => {
-         // Verify callback
          console.log('User profile:', profile);
          return done(null, profile);
        }
@@ -202,79 +228,7 @@ chmod +x scripts/run_mock_server_for_integration_tests.sh
 chmod +x scripts/run_mock_server_for_public_client.sh
 ```
 
-#### 1. Running Integration Tests
-
-Integration tests validate the complete OpenID Connect flow, ensuring that authentication and authorization mechanisms work as expected.
-
-**Steps:**
-
-1. **Start the Mock Server for Integration Tests:**
-
-   ```bash
-   ./scripts/run_mock_server_for_integration_tests.sh
-   ```
-
-   **Script Contents (`run_mock_server_for_integration_tests.sh`):**
-
-   ```bash
-   #!/usr/bin/env bash
-
-   pnpm start:mock-server --client test-client --realm TestRealm --authServerUrl http://keycloak:8080 \
-   --handleTokenExchange false --forwardCallbackUrl http://localhost:3002/sink \
-   --redirectUrl http://localhost:3003/sink
-   ```
-
-   **Explanation:**
-   - **`--handleTokenExchange false`:** The mock server forwards the token exchange process instead of handling it internally.
-   - **`--forwardCallbackUrl http://localhost:3002/sink`:** Specifies where to forward the authorization code.
-   - **`--redirectUrl http://localhost:3003/sink`:** Sets the redirect URL after handling the token exchange.
-
-2. **Run Integration Tests:**
-
-   ```bash
-   pnpm test:integration
-   ```
-
-   This command executes the integration tests, which utilize the mock server to simulate authentication flows.
-
-    ![integration_tests](./assets/images/integration_tests.png)
-
-#### 2. Running Public Client
-
-The public client example demonstrates how to authenticate using the public client configuration with Keycloak.
-
-**Steps:**
-
-1. **Start the Mock Server for Public Client:**
-
-   ```bash
-   ./scripts/run_mock_server_for_public_client.sh
-   ```
-
-   **Script Contents (`run_mock_server_for_public_client.sh`):**
-
-   ```bash
-   #!/usr/bin/env bash
-
-   pnpm start:mock-server --client test-client --realm TestRealm --authServerUrl http://keycloak:8080 \
-   --handleTokenExchange true --redirectUrl http://localhost:3000/callback
-   ```
-
-   **Explanation:**
-   - **`--handleTokenExchange true`:** The mock server handles the token exchange process internally.
-   - **`--redirectUrl http://localhost:3000/callback`:** Sets the redirect URL after successful authentication.
-
-2. **Run the Public Client:**
-
-   ```bash
-   node samples/public-client.js --clientId test-client --authServerUrl http://keycloak:8080
-   ```
-
-   **Explanation:**
-   - **`--clientId test-client`:** Specifies the Keycloak client ID to use.
-   - **`--authServerUrl http://keycloak:8080`:** Points to the Keycloak server's URL within the devcontainer.
-
-   ![public_client](./assets/images/public_client.png)
+---
 
 ## Additional Information
 
@@ -287,6 +241,8 @@ Due to network configurations within the devcontainer, `http://localhost:8080` i
 - **Hostname Configuration:**
   - The Keycloak server's hostname is set to `keycloak`, ensuring that services within the devcontainer can resolve it correctly.
   - `KC_HOSTNAME_STRICT` is set to `false` to allow external access via `http://localhost:8080` from your host machine's browser.
+
+---
 
 ## License
 
