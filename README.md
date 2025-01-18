@@ -107,7 +107,7 @@ This example demonstrates how to configure a public client and use a mock server
 2. **Start the Mock Server:**
 
    ```bash
-   pnpm run mock-server
+   pnpm  start:mock-server
    ```
 
 3. **Example Code:**
