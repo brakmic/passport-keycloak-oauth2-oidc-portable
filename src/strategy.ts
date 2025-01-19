@@ -30,6 +30,8 @@ type VerifyCallbackWithRequest = (
  * Options for configuring the Keycloak strategy with passReqToCallback set to true.
  */
 interface KeycloakStrategyOptions {
+  authorizationURL?: string; // Optional
+  tokenURL?: string;         // Optional
   realm: string;
   authServerURL: string;
   clientID: string;
@@ -52,14 +54,14 @@ interface KeycloakStrategyOptions {
  * `KeycloakStrategy` class extending `OAuth2Strategy`.
  */
 class KeycloakStrategy extends OAuth2Strategy {
-  private options: KeycloakStrategyOptions;
+  protected options: KeycloakStrategyOptions;
   private _userProfileURL: string;
 
   constructor(options: KeycloakStrategyOptions, verify: VerifyCallbackWithRequest) {
     const realm = encodeURIComponent(options.realm || 'master');
     const publicClient = options.publicClient !== false; // Default to true
     const _sslRequired = options.sslRequired || 'external';
-
+  
     if (!options.authServerURL) {
       throw new Error('Keycloak authServerURL is required.');
     }
@@ -69,16 +71,25 @@ class KeycloakStrategy extends OAuth2Strategy {
     if (!options.clientSecret && !publicClient) {
       throw new Error('Keycloak clientSecret is required for confidential clients.');
     }
-
+  
     // Construct authorization and token URLs
     const authorizationURL = `${options.authServerURL}/realms/${realm}/protocol/openid-connect/auth`;
     const tokenURL = `${options.authServerURL}/realms/${realm}/protocol/openid-connect/token`;
-
+  
     // Define scopes
     const requiredScopes = ['openid', 'profile', 'email'];
-    const existingScopes = options.scope ? (Array.isArray(options.scope) ? options.scope : options.scope.split(' ')) : [];
+    const existingScopes = options.scope
+      ? Array.isArray(options.scope)
+        ? options.scope
+        : options.scope.split(' ')
+      : [];
     const scope = Array.from(new Set([...requiredScopes, ...existingScopes])).join(' ');
-
+  
+    // Extend options to include URLs and scope
+    options.authorizationURL = authorizationURL;
+    options.tokenURL = tokenURL;
+    options.scope = scope;
+  
     // Build the full options for OAuth2Strategy
     const strategyOptions: StrategyOptionsWithRequest = {
       clientID: options.clientID,
@@ -98,13 +109,14 @@ class KeycloakStrategy extends OAuth2Strategy {
       pkce: options.pkce,
       proxy: options.proxy,
     };
-
+  
     super(strategyOptions, verify);
-
+  
     this.options = options;
     this._userProfileURL = `${options.authServerURL}/realms/${realm}/protocol/openid-connect/userinfo`;
     this.name = 'keycloak';
   }
+  
 
   /**
    * Override the authorizationParams method to include PKCE parameters.
@@ -163,7 +175,7 @@ class KeycloakStrategy extends OAuth2Strategy {
         profile._json = json;
 
         done(null, profile);
-      } catch (e) {
+      } catch (_e) {
         done(new Error('Failed to parse user profile'));
       }
     });
