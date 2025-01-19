@@ -4,8 +4,8 @@ import jwt from "jsonwebtoken";
 import axios from "axios";
 import express from "express";
 import http from "http";
-import config from "./config";
-import { waitForServiceReady } from "./utils";
+import config from "../config";
+import { waitForServiceReady } from "../utils";
 
 jest.setTimeout(180000);
 
