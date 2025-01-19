@@ -16,13 +16,17 @@ This module lets you authenticate using Keycloak in your Node.js applications. B
    - [Configure Strategy](#configure-strategy)
    - [Example 1: Confidential Client](#example-1-confidential-client)
    - [Example 2: Public Client with Local Keycloak and Mock Server](#example-2-public-client-with-local-keycloak-and-mock-server)
+   - [Example 3: Public Client Standalone](#example-3-public-client-standalone)
    - [Authenticate Requests](#authenticate-requests)
-5. [How to Get Roles](#how-to-get-roles)
-6. [Development](#development)
+5. [Understanding PKCE](#understanding-pkce)
+   - [PKCE Workflow](#pkce-workflow)
+   - [PKCE ASCII Diagram](#pkce-ascii-diagram)
+6. [How to Get Roles](#how-to-get-roles)
+7. [Development](#development)
    - [Scripts for Starting Mock Server in Different Scenarios](#scripts-for-starting-mock-server-in-different-scenarios)
-7. [Additional Information](#additional-information)
+8. [Additional Information](#additional-information)
    - [Accessing Keycloak from Devcontainer](#accessing-keycloak-from-devcontainer)
-8. [License](#license)
+9. [License](#license)
 
 ---
 
@@ -37,28 +41,17 @@ This module lets you authenticate using Keycloak in your Node.js applications. B
 Here’s a rundown of what I’ve added and updated:
 
 - **PKCE Support**: Full support for Proof Key for Code Exchange (PKCE) has been added to enhance the security of public clients.
+- **Standalone Public Client**: Added `public-client-standalone.js`, a fully self-contained example that completes PKCE without relying on a mock server.
+- **Mock Server for Testing**: Retained the mock server (`test/mock-server.js`) for scenarios requiring more controlled debugging or testing flows.
 - **Devcontainer Support**: Full support for Visual Studio Code Dev Containers to streamline development.
-- **Keycloak via Docker Compose**: Keycloak is now effortlessly launched in its own container, accessible:
-  - From the devcontainer: `http://keycloak:8080` (internal) and `http://keycloak:9000` (health/ready checks).
-  - From your browser: `http://localhost:8080` and `http://localhost:9000`.
-- **Integration Tests**: Added tests to validate OpenID Connect flows and scope handling.
-- **Mock Server for Testing**: A dedicated mock server (`test/mock-server.js`) for simulating complete OpenID Connect flows.
-- **Shared Network**: A shared Docker network enables communication between the devcontainer and the Keycloak container.
-- **Linting**: Configured ESLint for consistent code style (`eslint.config.js`).
-- **Utility Scripts**: Added utility functions for managing the Keycloak container and workspace configurations.
-- **Modern Testing Framework**: Migrated from Mocha to Jest for speed and developer comfort.
-- **Efficient Package Management**: Switched to PNPM for better dependency management. Nothing against npm—it’s just that PNPM is way better, faster, and more elegant.
-- **CI-Ready Scripts**: Scripts for starting/stopping Keycloak, running tests, and linting are all in `package.json`.
-- **Scripts for Starting Mock Server in Different Scenarios**: Added two scripts located in the `scripts` folder:
-  - `run_mock_server_for_integration_tests.sh`: Starts the mock server configured for integration tests.
-  - `run_mock_server_for_public_client.sh`: Starts the mock server configured for public client usage.
+- **Keycloak via Docker Compose**: Keycloak is now effortlessly launched in its own container.
 
 ---
 
 ## Install
 
 ```bash
-$ pnpm install passport-keycloak-oauth2-oidc-portable
+pnpm install passport-keycloak-oauth2-oidc-portable
 ```
 
 ---
@@ -190,9 +183,46 @@ This example demonstrates how to configure a public client and use a mock server
 
 ---
 
+### Example 3: Public Client Standalone
+
+For scenarios where a mock server is unnecessary, you can use the standalone client `public-client-standalone.js`. This script communicates directly with Keycloak to complete the PKCE flow.
+
+1. **Run the Standalone Public Client:**
+
+   ```bash
+   node ./samples/public-client-standalone.js --authServerUrl http://keycloak:8080 --client test-client --use-pkce
+   ```
+
+---
+
 ### Authenticate Requests
 
 Use `passport.authenticate()` to authenticate incoming requests. Refer to the examples for detailed implementations.
+
+---
+
+### Understanding PKCE
+
+#### PKCE Workflow
+
+PKCE (Proof Key for Code Exchange) is a security extension for OAuth 2.0 designed to prevent authorization code interception attacks. It is particularly useful for public clients, which cannot securely store a client secret.
+
+#### PKCE ASCII Diagram
+
+```
+Client                          Authorization Server
+  |                                   |
+  | --------- (1) Authorization Request --------> |
+  |               + code_challenge                |
+  |               + code_challenge_method         |
+  |                                   |
+  | <--------- (2) Authorization Code ----------- |
+  |                                   |
+  | --------- (3) Token Request ----------------> |
+  |               + code_verifier                 |
+  |                                   |
+  | <--------- (4) Access Token ---------------- |
+```
 
 ---
 
@@ -214,19 +244,17 @@ To include roles in the UserInfo response:
 
 ### Scripts for Starting Mock Server in Different Scenarios
 
-To facilitate different testing and usage scenarios, two scripts have been added to the `scripts` subfolder:
+1. **Integration Tests**:
 
-1. **`run_mock_server_for_integration_tests.sh`:** Configures and starts the mock server for integration testing.
-2. **`run_mock_server_for_public_client.sh`:** Configures and starts the mock server for public client usage.
+   ```bash
+   ./scripts/run_mock_server_for_integration_tests.sh
+   ```
 
-**Make Scripts Executable:**
+2. **Public Client**:
 
-Ensure that the scripts have execute permissions. You can set this by running:
-
-```bash
-chmod +x scripts/run_mock_server_for_integration_tests.sh
-chmod +x scripts/run_mock_server_for_public_client.sh
-```
+   ```bash
+   ./scripts/run_mock_server_for_public_client.sh
+   ```
 
 ---
 
@@ -234,13 +262,7 @@ chmod +x scripts/run_mock_server_for_public_client.sh
 
 ### Accessing Keycloak from Devcontainer
 
-Due to network configurations within the devcontainer, `http://localhost:8080` is inaccessible. Instead, you should use `http://keycloak:8080` to interact with the Keycloak server from within the devcontainer. This setup allows seamless communication between services running inside the devcontainer and the Keycloak server running in a separate Docker container.
-
-**Key Points:**
-
-- **Hostname Configuration:**
-  - The Keycloak server's hostname is set to `keycloak`, ensuring that services within the devcontainer can resolve it correctly.
-  - `KC_HOSTNAME_STRICT` is set to `false` to allow external access via `http://localhost:8080` from your host machine's browser.
+Use `http://keycloak:8080` for internal access within the devcontainer.
 
 ---
 
