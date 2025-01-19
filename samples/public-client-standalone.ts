@@ -161,9 +161,9 @@ passport.use(
     },
     (
        // 'req' is now accessible in the verify callback
-      req: Request,
-      accessToken: string,
-      refreshToken: string,
+      _req: Request,
+      _accessToken: string,
+      _refreshToken: string,
       profile: any,
       done: (error: any, user?: any) => void
     ) => {
@@ -204,7 +204,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Logging middleware for debugging.
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((_req: Request, _res: Response, next: NextFunction) => {
   // console.log(`Public Client Session ID: ${req.sessionID}`);
   // console.log(`Authenticated User: ${JSON.stringify(req.user.username)}`);
   next();
@@ -281,7 +281,7 @@ app.get('/profile', (req: Request, res: Response, next: NextFunction): void => {
 /**
  * Handles login failures.
  */
-app.get('/login', (req: Request, res: Response) => {
+app.get('/login', (_req: Request, res: Response) => {
   res.status(401).send('Authentication Failed. Please try again.');
 });
 
@@ -295,7 +295,7 @@ app.get('/debug-session', (req: Request, res: Response) => {
 /**
  * Global error handler to catch and log unexpected errors.
  */
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Unhandled Error:', err);
   res.status(500).send('Internal Server Error');
 });
