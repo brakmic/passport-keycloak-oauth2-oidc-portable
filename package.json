@@ -2,17 +2,49 @@
   "name": "passport-keycloak-oauth2-oidc-portable",
   "version": "2.1.0",
   "description": "A Passport.js strategy for authenticating with Keycloak using the OAuth2/OIDC API (portable version)",
-  "main": "./lib/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "type": "commonjs",
   "scripts": {
     "pretest:integration": "pnpx puppeteer browsers install chrome",
-    "test": "jest",
-    "test:integration": "jest --testPathPattern=./test/integration.test.js -- --detectOpenHandles",
-    "test:package": "jest --testPathPattern=./test/package.test.js",
-    "test:strategy": "jest --testPathPattern=./test/strategy.test.js",
+    "test": "jest --config ./jest.config.js --passWithNoTests",
+    "test:unit": "jest --config ./jest.config.js --testPathPattern=./test/unit/*.test.ts",
+    "test:integration": "jest --config ./jest.config.js --testPathPattern=./test/integration.test.ts --detectOpenHandles",
+    "test:package": "jest --config ./jest.config.js --testPathPattern=./test/package.test.ts",
+    "test:strategy": "jest --config ./jest.config.js --testPathPattern=./test/strategy.test.ts",
     "start:keycloak": "sudo docker compose -f test/bootstrap/keycloak/docker-compose.test.yml up -d --remove-orphans",
     "stop:keycloak": "sudo docker compose -f test/bootstrap/keycloak/docker-compose.test.yml down",
     "lint": "pnpx eslint .",
-    "start:mock-server": "node test/mock-server.js"
+    "lint:fix": "pnpx eslint . --fix",
+    "start:mock-server": "node test/mock-server.js",
+    "clean": "rimraf dist && rimraf coverage && rimraf tsconfig.*.tsbuildinfo",
+    "copy:assets": "cp -R samples/public dist/samples/public && cp -R samples/views dist/samples/views",
+    "build:src": "tsc --build tsconfig.src.json",
+    "build:samples": "tsc --build tsconfig.samples.json && pnpm copy:assets",
+    "build:alias:src": "tsc-alias -p ./tsconfig.src.json",
+    "build:alias:samples": "tsc-alias -p ./tsconfig.samples.json",
+    "build:alias": "pnpm build:alias:src && pnpm build:alias:samples",
+    "prebuild": "pnpm clean",
+    "build": "pnpm build:src && pnpm build:samples && pnpm build:alias",
+    "prepublishOnly": "pnpm build",
+    "prepare": "husky",
+    "commit": "cz"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   },
   "repository": {
     "type": "git",
@@ -22,7 +54,8 @@
     "passport",
     "keycloak",
     "oauth2",
-    "oidc"
+    "oidc",
+    "pkce"
   ],
   "author": {
     "name": "Harris Brakmic",
@@ -39,17 +72,33 @@
     "url": "https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/issues"
   },
   "homepage": "https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "dependencies": {
     "passport-oauth2": "^1.8.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.22.9",
     "@babel/core": "^7.26.0",
-    "@babel/helper-validator-identifier": "^7.25.9",
     "@babel/preset-env": "^7.26.0",
-    "@eslint/js": "^9.17.0",
+    "@eslint/eslintrc": "^3.2.0",
+    "@types/cors": "^2.8.17",
+    "@types/ejs": "^3.1.5",
+    "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.1",
+    "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.7",
+    "@types/passport": "^1.0.17",
+    "@types/passport-oauth2": "^1.4.17",
+    "@types/yargs": "^17.0.33",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
     "axios": "^1.7.9",
-    "babel-jest": "^29.7.0",
+    "commitizen": "^4.3.1",
     "cors": "^2.8.5",
+    "cz-conventional-changelog": "^3.3.0",
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "eslint": "^9.17.0",
@@ -57,13 +106,17 @@
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "globals": "^15.14.0",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
-    "jest-resolve": "^29.7.0",
     "jsonwebtoken": "^9.0.2",
-    "make-node": "^0.4.6",
     "openid-client": "^5.1.0",
     "passport": "^0.7.0",
     "puppeteer": "^23.11.1",
+    "rimraf": "^6.0.1",
+    "standard-version": "^9.5.0",
+    "ts-jest": "^29.2.5",
+    "tsc-alias": "^1.8.10",
+    "typescript": "^5.7.3",
     "yargs": "^17.7.2"
   }
 }
