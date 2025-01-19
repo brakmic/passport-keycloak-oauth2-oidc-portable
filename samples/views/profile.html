@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>User Profile</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
@@ -12,31 +12,31 @@
     <div class="profile-details">
       <div class="profile-item">
         <div class="profile-key">ID:</div>
-        <div class="profile-value"><%= userProfile.sub %></div>
+        <div class="profile-value"><%= userProfile.id %></div>
       </div>
       <div class="profile-item">
         <div class="profile-key">Email Verified:</div>
-        <div class="profile-value"><%= userProfile.email_verified %></div>
+        <div class="profile-value"><%= userProfile.email_verified ? 'Yes' : 'No' %></div>
       </div>
       <div class="profile-item">
         <div class="profile-key">Name:</div>
-        <div class="profile-value"><%= userProfile.name %></div>
+        <div class="profile-value"><%= userProfile.name || 'N/A' %></div>
       </div>
       <div class="profile-item">
         <div class="profile-key">Username:</div>
-        <div class="profile-value"><%= userProfile.preferred_username %></div>
+        <div class="profile-value"><%= userProfile.username %></div>
       </div>
       <div class="profile-item">
         <div class="profile-key">First Name:</div>
-        <div class="profile-value"><%= userProfile.given_name %></div>
+        <div class="profile-value"><%= userProfile.given_name || 'N/A' %></div>
       </div>
       <div class="profile-item">
         <div class="profile-key">Last Name:</div>
-        <div class="profile-value"><%= userProfile.family_name %></div>
+        <div class="profile-value"><%= userProfile.family_name || 'N/A' %></div>
       </div>
       <div class="profile-item">
         <div class="profile-key">Email:</div>
-        <div class="profile-value"><%= userProfile.email %></div>
+        <div class="profile-value"><%= userProfile.emails[0]?.value || 'N/A' %></div>
       </div>
     </div>
     <div class="footer">Authenticated via Keycloak</div>
