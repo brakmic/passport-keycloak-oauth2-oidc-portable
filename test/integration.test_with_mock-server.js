@@ -82,9 +82,9 @@ describe('KeycloakStrategy Integration Tests for Public Clients', () => {
   let serverPort = 3003; // Port for the temporary callback server
 
   // Variables to capture code and state
-  let capturedCode = null;
-  let capturedState = null;
-  let authorizationCodeReceived = false;
+  let _capturedCode = null;
+  let _capturedState = null;
+  let _authorizationCodeReceived = false;
 
   const debugLog = (message, data = null) => {
     if (DEBUG) {
@@ -109,9 +109,9 @@ describe('KeycloakStrategy Integration Tests for Public Clients', () => {
     app.get('/sink', (req, res) => {
       const { code, state } = req.query;
       if (code) {
-        capturedCode = code;
-        capturedState = state;
-        authorizationCodeReceived = true;
+        _capturedCode = code;
+        _capturedState = state;
+        _authorizationCodeReceived = true;
         res.send('Authorization code received. You can close this window.');
         debugLog('Authorization code received at /sink:', { code, state });
         resolveAuth({ code, state });
