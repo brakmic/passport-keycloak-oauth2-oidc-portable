@@ -2,8 +2,8 @@
   "name": "passport-keycloak-oauth2-oidc-portable",
   "version": "2.1.0",
   "description": "A Passport.js strategy for authenticating with Keycloak using the OAuth2/OIDC API (portable version)",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/lib/index.js",
+  "types": "./dist/lib/index.d.ts",
   "files": [
     "dist/**/*",
     "README.md",
@@ -11,8 +11,8 @@
   ],
   "exports": {
     ".": {
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/lib/index.js",
+      "types": "./dist/lib/index.d.ts"
     }
   },
   "type": "commonjs",
@@ -38,7 +38,7 @@
     "build:alias:samples": "tsc-alias -p ./tsconfig.samples.json",
     "build:alias": "pnpm build:alias:src && pnpm build:alias:samples",
     "prebuild": "pnpm clean",
-    "build": "pnpm build:src && pnpm build:samples && pnpm build:alias",
+    "build": "pnpm build:src && pnpm build:alias",
     "prepublishOnly": "pnpm build",
     "prepare": "husky",
     "commit": "cz"
