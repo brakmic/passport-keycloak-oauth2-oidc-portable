@@ -56,3 +56,6 @@ pnpm-lock.yaml
 
 # Ignore IntelliJ and WebStorm project files
 .idea/
+
+# Ignore TypeScript build info files
+*.tsbuildinfo
