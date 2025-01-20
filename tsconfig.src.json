@@ -8,7 +8,8 @@
     "declarationMap": true,
     "paths": {
       "*": ["*"]
-    }
+    },
+    "tsBuildInfoFile": "tsconfig.src.tsbuildinfo"
   },
   "include": ["src/**/*.ts"]
 }

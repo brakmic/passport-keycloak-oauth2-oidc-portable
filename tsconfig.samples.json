@@ -7,7 +7,8 @@
     "disableSourceOfProjectReferenceRedirect": true,
     "paths": {
       "../src/*": ["../lib/*"]
-    }
+    },
+    "tsBuildInfoFile": "tsconfig.samples.tsbuildinfo"
   },
   "include": ["samples/**/*.ts"],
   "references": [
