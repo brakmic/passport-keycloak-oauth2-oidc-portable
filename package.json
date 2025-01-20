@@ -26,6 +26,7 @@
     "e2e:server": "ts-node --project tsconfig.e2e.json test/e2e/server.ts",
     "start:keycloak": "sudo docker compose -f test/bootstrap/keycloak/docker-compose.test.yml up -d --remove-orphans",
     "stop:keycloak": "sudo docker compose -f test/bootstrap/keycloak/docker-compose.test.yml down",
+    "start:public-client": "ts-node --project tsconfig.public-client.json ./samples/public-client-standalone.ts ",
     "lint": "pnpx eslint .",
     "lint:fix": "pnpx eslint . --fix",
     "start:mock-server": "node test/mock-server.js",
