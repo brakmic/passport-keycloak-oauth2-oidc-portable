@@ -36,7 +36,10 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "public-client",
       "redirectUris": [
-        "http://localhost:3000/callback"
+        "http://localhost:3000/*",
+        "http://localhost:3001/*",
+        "http://localhost:3002/*",
+        "http://localhost:3003/*"
       ],
       "webOrigins": [
         "*"
