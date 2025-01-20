@@ -39,9 +39,14 @@
     "build:alias": "pnpm build:alias:src && pnpm build:alias:samples",
     "prebuild": "pnpm clean",
     "build": "pnpm build:src && pnpm build:alias",
-    "prepublishOnly": "pnpm build",
     "prepare": "husky",
-    "commit": "cz"
+    "commit": "cz",
+    "prepublishOnly": "pnpm build",
+    "release": "standard-version",
+    "publish:release": "pnpm release && git push --follow-tags origin main && pnpm publish",
+    "release:major": "standard-version --release-as major",
+    "release:minor": "standard-version --release-as minor",
+    "release:patch": "standard-version --release-as patch"
   },
   "config": {
     "commitizen": {
