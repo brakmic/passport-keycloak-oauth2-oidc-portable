@@ -142,7 +142,7 @@ passport.use(
       authServerURL: argv.authServerUrl,
       clientID: argv.clientId,
       // Must always be a string
-      clientSecret: clientSecret,
+      // clientSecret: clientSecret,
       callbackURL: argv.callbackUrl,
        // Set based on your client type
       publicClient: isPublicClient,
