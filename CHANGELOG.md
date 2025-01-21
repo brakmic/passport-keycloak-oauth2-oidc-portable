@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.3](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.2.2...v2.2.3) (2025-01-21)
+
+
+### Bug Fixes
+
+* make clientSecret optional for public clients in KeycloakStrategy ([091027f](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/091027fbf9d2ce24192978f0444b275a017fa02f))
+
 ### [2.2.2](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.2.1...v2.2.2) (2025-01-20)
 
 ### [2.2.1](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.2.0...v2.2.1) (2025-01-20)

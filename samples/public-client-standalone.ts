@@ -129,8 +129,8 @@ app.use(
  * For public clients, clientSecret should be an empty string.
  */
 const isPublicClient = true;
- // Replace with actual secret for confidential clients.
-const clientSecret = isPublicClient ? '' : process.env.CLIENT_SECRET || '';
+// Replace with actual secret for confidential clients.
+// const clientSecret = isPublicClient ? '' : process.env.CLIENT_SECRET || '';
 
 /**
  * Passport configuration with passReqToCallback enabled internally.
