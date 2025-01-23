@@ -1,9 +1,4 @@
 {
   "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
-  },
-  "include": ["test/e2e/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["test/e2e/**/*.ts"]
 }

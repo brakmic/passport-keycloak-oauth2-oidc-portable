@@ -11,6 +11,7 @@
     "tsBuildInfoFile": "tsconfig.samples.tsbuildinfo"
   },
   "include": ["samples/**/*.ts"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
   "references": [
     { "path": "./tsconfig.src.json" }
   ]

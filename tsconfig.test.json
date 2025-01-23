@@ -3,7 +3,12 @@
   "compilerOptions": {
     "types": ["jest", "node"],
     "outDir": "./build/test",
-    "rootDir": "./test"
+    "rootDir": "./test",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node"
   },
-  "include": ["test/**/*.ts"]
+  "include": ["test/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
