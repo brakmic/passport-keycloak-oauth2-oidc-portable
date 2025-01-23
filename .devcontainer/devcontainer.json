@@ -23,7 +23,8 @@
     3000, // for testing
     3001, // for testing
     3002, // for testing
-    3003  // for testing
+    3003, // for testing
+    4200 // for Angular
   ],
   "initializeCommand": "docker network inspect devnetwork >/dev/null 2>&1 || docker network create devnetwork",
   "runArgs": ["--network=devnetwork"],
