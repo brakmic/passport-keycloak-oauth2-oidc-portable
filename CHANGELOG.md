@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.2.5...v2.3.0) (2025-01-23)
+
+
+### Features
+
+* attach id_token to user profile ([772c811](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/772c811f949de02747ac914cac86b01b0cc3b183))
+
 ### [2.2.5](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.2.4...v2.2.5) (2025-01-21)
 
 ### [2.2.4](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.2.2...v2.2.4) (2025-01-21)
