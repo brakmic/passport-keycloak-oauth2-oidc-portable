@@ -64,3 +64,6 @@ pnpm-lock.yaml
 
 # Ignore npm credentials
 .npmrc
+
+# temp
+temp/
