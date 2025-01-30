@@ -1,6 +1,12 @@
-import OAuth2Strategy, { StateStore } from 'passport-oauth2';
-import { InternalOAuthError, StrategyOptionsWithRequest } from 'passport-oauth2';
+import OAuth2Strategy, { InternalOAuthError, StrategyOptionsWithRequest } from 'passport-oauth2';
 import { Request } from 'express';
+
+// Extend StrategyOptionsWithRequest with stateStore
+declare module 'passport-oauth2' {
+  interface StrategyOptionsWithRequest {
+    stateStore?: OAuth2Strategy.StateStore;
+  }
+}
 
 interface Profile {
   provider: string;
@@ -33,7 +39,7 @@ interface BaseKeycloakStrategyOptions {
   customHeaders?: Record<string, string>;
   scopeSeparator?: string;
   sessionKey?: string;
-  store?: StateStore;
+  stateStore?: OAuth2Strategy.StateStore;
   state?: any;
   skipUserProfile?: any;
   pkce?: boolean;
@@ -95,7 +101,7 @@ class KeycloakStrategy extends OAuth2Strategy {
       customHeaders: options.customHeaders,
       scopeSeparator: options.scopeSeparator,
       state: options.state,
-      store: options.store,
+      stateStore: options.stateStore,
       proxy: options.proxy,
     };
 
@@ -187,12 +193,9 @@ class KeycloakStrategy extends OAuth2Strategy {
    */
   authorizationParams(options: any): any {
     const params: any = super.authorizationParams(options);
-    if (options.code_challenge) {
-      params.code_challenge = options.code_challenge;
+    if (options.req && options.req.session && options.req.session.code_challenge) {
+      params.code_challenge = options.req.session.code_challenge;
       params.code_challenge_method = 'S256';
-    }
-    if (options.state) {
-      params.state = options.state;
     }
     return params;
   }
