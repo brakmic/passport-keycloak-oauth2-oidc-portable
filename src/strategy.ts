@@ -1,6 +1,12 @@
-import OAuth2Strategy = require('passport-oauth2');
-import { InternalOAuthError, StrategyOptionsWithRequest } from 'passport-oauth2';
+import OAuth2Strategy, { InternalOAuthError, StrategyOptionsWithRequest } from 'passport-oauth2';
 import { Request } from 'express';
+
+// Extend StrategyOptionsWithRequest with stateStore
+declare module 'passport-oauth2' {
+  interface StrategyOptionsWithRequest {
+    stateStore?: OAuth2Strategy.StateStore;
+  }
+}
 
 interface Profile {
   provider: string;
@@ -33,7 +39,7 @@ interface BaseKeycloakStrategyOptions {
   customHeaders?: Record<string, string>;
   scopeSeparator?: string;
   sessionKey?: string;
-  store?: OAuth2Strategy.StateStore;
+  stateStore?: OAuth2Strategy.StateStore;
   state?: any;
   skipUserProfile?: any;
   pkce?: boolean;
@@ -76,7 +82,7 @@ class KeycloakStrategy extends OAuth2Strategy {
     const mergedScopes = Array.from(new Set([...requiredScopes, ...existingScopes])).join(' ');
 
     // For a public client => no secret
-    const clientSecret = publicClient ? '' : (options.clientSecret || '');
+    const clientSecret = publicClient ? '' : options.clientSecret || '';
 
     options.authorizationURL = authorizationURL;
     options.tokenURL = tokenURL;
@@ -95,8 +101,8 @@ class KeycloakStrategy extends OAuth2Strategy {
       customHeaders: options.customHeaders,
       scopeSeparator: options.scopeSeparator,
       state: options.state,
-      store: options.store,
-      proxy: options.proxy
+      stateStore: options.stateStore,
+      proxy: options.proxy,
     };
 
     // Final verify callback
@@ -187,8 +193,8 @@ class KeycloakStrategy extends OAuth2Strategy {
    */
   authorizationParams(options: any): any {
     const params: any = super.authorizationParams(options);
-    if (options.code_challenge) {
-      params.code_challenge = options.code_challenge;
+    if (options.req && options.req.session && options.req.session.code_challenge) {
+      params.code_challenge = options.req.session.code_challenge;
       params.code_challenge_method = 'S256';
     }
     return params;
@@ -198,7 +204,7 @@ class KeycloakStrategy extends OAuth2Strategy {
    * Overridden to pass code_verifier from session if present.
    */
   tokenParams(options: any): any {
-    const params: any = {};
+    const params: any = super.tokenParams(options);
     if (options.req && options.req.session && options.req.session.code_verifier) {
       params.code_verifier = options.req.session.code_verifier;
     }
@@ -228,7 +234,7 @@ class KeycloakStrategy extends OAuth2Strategy {
           username: json.preferred_username || '',
           emails: json.email ? [{ value: json.email }] : [],
           _raw: bodyString,
-          _json: json
+          _json: json,
         };
 
         done(null, profile);
