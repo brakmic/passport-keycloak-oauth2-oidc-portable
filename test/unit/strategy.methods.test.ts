@@ -62,7 +62,7 @@ describe("KeycloakStrategy Methods", () => {
   describe("authorizationParams", () => {
     it("should add PKCE parameters if provided", () => {
       const strategy = new TestableKeycloakStrategy(baseOptions, jest.fn());
-      const params = strategy.authorizationParams({ code_challenge: "testChallenge" });
+      const params = strategy.authorizationParams({ req: { session: { code_challenge: "testChallenge" } } });
 
       expect(params.code_challenge).toBe("testChallenge");
       expect(params.code_challenge_method).toBe("S256");
