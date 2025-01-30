@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.0](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.3.1...v2.4.0) (2025-01-30)
+
+
+### Bug Fixes
+
+* extend StrategyOptionsWithRequest interface ([ea3c11b](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/ea3c11bb4c89dfba686ea10017ff337d25ec84c1))
+* save store ([66b5635](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/66b5635d1597b56ed304ff577dcda534eb4663ac))
+* test pkce parameters ([3a0c57a](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/3a0c57aa66ee54668a8ea1bd76604646c83ab379))
+
 ### [2.3.1](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.3.0...v2.3.1) (2025-01-23)
 
 ## [2.3.0](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.2.5...v2.3.0) (2025-01-23)
