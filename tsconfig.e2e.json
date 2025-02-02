@@ -1,4 +1,16 @@
 {
   "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist/test/e2e",
+    "rootDir": "./test/e2e",
+    "allowJs": true,
+    "esModuleInterop": true
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  },
   "include": ["test/e2e/**/*.ts"]
 }

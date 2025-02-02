@@ -1,14 +1,13 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "types": ["jest", "node"],
-    "outDir": "./build/test",
-    "rootDir": "./test",
-    "strict": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node"
+    "outDir": "./dist/test",
+    "rootDir": ".",
+    "baseUrl": "."
   },
-  "include": ["test/**/*.ts"],
+  "include": ["test/**/*.ts", "src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
