@@ -3,10 +3,16 @@ import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
 import cors from 'cors';
 import KeycloakStrategy from '../src/strategy';
-import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+import yargs from 'yargs/yargs';
 import crypto from 'crypto';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import ejs from 'ejs';
+
+// ESM replacement for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Extend express-session to include 
@@ -36,7 +42,7 @@ interface YargsArguments {
 /**
  * Parse command-line flags and cast as YargsArguments.
  */
-const argv = yargs
+const argv = yargs(hideBin(process.argv))
   .option('authServerUrl', {
     alias: 'auth',
     type: 'string',
@@ -102,9 +108,9 @@ app.use(
 );
 
 // View Engine setup
-const appRoot = path.resolve(__dirname);
-app.set('views', path.join(appRoot, 'views'));
-app.use(express.static(path.join(appRoot, 'public')));
+const appRoot = path.resolve(__dirname, '..');
+app.set('views', path.join(appRoot, 'samples', 'views'));
+app.use(express.static(path.join(appRoot, 'samples', 'public')));
 app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 
