@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.5.0](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.4.1...v2.5.0) (2025-02-02)
+
+
+### Features
+
+* add separate tsconfig for commonjs ([b87dc8c](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/b87dc8c3056d338f35a6d02998f4a3114cf3ca5c))
+* update tsconfigs to esm ([dda9049](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/dda90492fe16f47730d1f47fccd6b7aecaad19df))
+
+
+### Bug Fixes
+
+* esm support in public-client sample ([8ece23b](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/8ece23b1bd0383ab63ff8ab20ffeca4a61f296ad))
+* upadate scripts for esm, replace ts-node with tsx ([de2bf21](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/de2bf21509a15e06c0436be01c279c329cb8d602))
+* update tests for esm ([afba902](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/afba902440e0d45aa6d8e3e4dfa42e8ef0941b0c))
+
 ### [2.4.1](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.4.0...v2.4.1) (2025-01-31)
 
 ## [2.4.0](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.3.1...v2.4.0) (2025-01-30)
