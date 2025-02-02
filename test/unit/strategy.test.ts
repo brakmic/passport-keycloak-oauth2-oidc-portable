@@ -1,3 +1,4 @@
+import { describe, it, expect } from '@jest/globals';
 import KeycloakStrategy from "../../src/strategy";
 
 const config = {

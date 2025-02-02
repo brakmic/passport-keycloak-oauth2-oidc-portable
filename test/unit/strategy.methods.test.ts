@@ -1,3 +1,4 @@
+import { jest, describe, it, expect } from '@jest/globals';
 import KeycloakStrategy from "../../src/strategy";
 import { InternalOAuthError } from "passport-oauth2";
 
@@ -30,6 +31,8 @@ type VerifyCallbackWithRequest = (
   profile: any,
   done: (err: any, user?: any) => void
 ) => void;
+
+type OAuth2Callback = (error: any, result?: any) => void;
 
 const baseOptions: KeycloakStrategyOptions = {
   realm: "testRealm",
@@ -103,7 +106,7 @@ describe("KeycloakStrategy Methods", () => {
     it("should retrieve and parse user profile correctly", (done) => {
       const mockOAuth2 = {
         useAuthorizationHeaderforGET: jest.fn(),
-        get: jest.fn((_url, _token, callback) => {
+        get: jest.fn((_url: string, _token: string, callback: OAuth2Callback) => {
           callback(
             null,
             JSON.stringify({
@@ -145,7 +148,7 @@ describe("KeycloakStrategy Methods", () => {
     it("should handle errors during profile retrieval", (done) => {
       const mockOAuth2 = {
         useAuthorizationHeaderforGET: jest.fn(),
-        get: jest.fn((_url, _token, callback) => {
+        get: jest.fn((_url: string, _token: string, callback: OAuth2Callback) => {
           callback(new Error("Failed to fetch"), null);
         }),
       };
@@ -167,7 +170,7 @@ describe("KeycloakStrategy Methods", () => {
     it("should handle invalid JSON in profile response", (done) => {
       const mockOAuth2 = {
         useAuthorizationHeaderforGET: jest.fn(),
-        get: jest.fn((_url, _token, callback) => {
+        get: jest.fn((_url: string, _token: string, callback: OAuth2Callback) => {
           callback(null, "invalid JSON");
         }),
       };
