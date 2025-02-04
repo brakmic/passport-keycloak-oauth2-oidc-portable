@@ -67,3 +67,6 @@ pnpm-lock.yaml
 
 # temp
 temp/
+
+# lib npm package outpus
+lib/

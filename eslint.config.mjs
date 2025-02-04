@@ -10,7 +10,7 @@ const compat = new FlatCompat();
 export default [
   // Ignore patterns to exclude all `.js`, `.mjs`, and other irrelevant files
   {
-    ignores: ["**/*.js", "**/*.mjs", "dist/", "node_modules/", "temp/"],
+    ignores: ["**/*.js", "**/*.mjs", "dist/", "node_modules/", "temp/", "lib/"],
   },
 
   // TypeScript linting rules
