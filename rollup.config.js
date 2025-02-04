@@ -11,6 +11,7 @@ export default {
     preserveModulesRoot: 'dist',
     entryFileNames: '[name].js'
   },
+  external: ['passport-oauth2', 'express'],
   plugins: [
     resolve({ extensions: ['.js'] }),
     commonjs(),
