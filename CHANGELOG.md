@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.5.2](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.5.1...v2.5.2) (2025-02-04)
+
+
+### Bug Fixes
+
+* copy dist/_virtual to lib ([5227bf0](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/5227bf0e2290115f3e86a086e2ed190e5f923516))
+
 ### [2.5.1](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.5.0...v2.5.1) (2025-02-04)
 
 
