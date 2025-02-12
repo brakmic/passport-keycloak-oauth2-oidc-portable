@@ -40,7 +40,7 @@ export interface AppConfig {
 const config: AppConfig = {
   keycloak: {
     protocol: process.env.KEYCLOAK_PROTOCOL || "http",
-    host: process.env.KEYCLOAK_HOST || "keycloak",
+    host: process.env.KEYCLOAK_HOST || "test-proxy",
     port: parseInt(process.env.KEYCLOAK_PORT || "8080", 10),
     realm: process.env.KEYCLOAK_REALM || "TestRealm",
     clientId: process.env.KEYCLOAK_CLIENT_ID || "test-client",
@@ -56,10 +56,10 @@ const config: AppConfig = {
   },
   docker: {
     composeFile: process.env.DOCKER_COMPOSE_FILE || "docker-compose.test.yml",
-    containerName: process.env.DOCKER_CONTAINER_NAME || "keycloak-demo",
+    containerName: process.env.DOCKER_CONTAINER_NAME || "server",
   },
-  keycloakBaseUrl: new URL(`${process.env.KEYCLOAK_PROTOCOL || "http"}://${process.env.KEYCLOAK_HOST || "keycloak"}:${process.env.KEYCLOAK_PORT || "8080"}`).href,
-  discoveryUrl: new URL(`/realms/${process.env.KEYCLOAK_REALM || "TestRealm"}/.well-known/openid-configuration`, `${process.env.KEYCLOAK_PROTOCOL || "http"}://${process.env.KEYCLOAK_HOST || "keycloak"}:${process.env.KEYCLOAK_PORT || "8080"}`).href,
+  keycloakBaseUrl: `${process.env.KEYCLOAK_PROTOCOL || "http"}://${process.env.KEYCLOAK_HOST || "test-proxy"}:${process.env.KEYCLOAK_PORT || "8080"}`,
+  discoveryUrl: `${process.env.KEYCLOAK_PROTOCOL || "http"}://${process.env.KEYCLOAK_HOST || "test-proxy"}:${process.env.KEYCLOAK_PORT || "8080"}/realms/${process.env.KEYCLOAK_REALM || "TestRealm"}/.well-known/openid-configuration`,
   callbackUrl: new URL(`/callback`, `${process.env.MOCK_SERVER_PROTOCOL || "http"}://${process.env.MOCK_SERVER_HOST || "localhost"}:${process.env.MOCK_SERVER_PORT || "3000"}`).href,
 };
 
