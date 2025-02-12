@@ -1,36 +1,17 @@
-# PKCE
-
-## Table of Contents
+# PKCE (Proof Key for Code Exchange)
 
 1. [Introduction](#introduction)
 2. [Understanding PKCE](#understanding-pkce)
-    - [What is PKCE?](#what-is-pkce)
-    - [Key Components of PKCE](#key-components-of-pkce)
+   - [What is PKCE?](#what-is-pkce)
+   - [Key Components of PKCE](#key-components-of-pkce)
 3. [PKCE Flow Overview](#pkce-flow-overview)
-    - [ASCII Diagram](#ascii-diagram)
-    - [Detailed Flow Description](#detailed-flow-description)
-4. [Integrating PKCE with Keycloak and Passport.js](#integrating-pkce-with-keycloak-and-passportjs)
-    - [Client Implementation](#client-implementation)
-    - [Custom KeycloakStrategy](#custom-keycloakstrategy)
-5. [Step-by-Step PKCE Process](#step-by-step-pkce-process)
-    - [1. Generating Code Verifier and Code Challenge](#1-generating-code-verifier-and-code-challenge)
-    - [2. Initiating the Authorization Request](#2-initiating-the-authorization-request)
-    - [3. Handling the Authorization Response](#3-handling-the-authorization-response)
-    - [4. Exchanging Authorization Code for Tokens](#4-exchanging-authorization-code-for-tokens)
-    - [5. Accessing Protected Resources](#5-accessing-protected-resources)
-6. [Advantages of Using PKCE](#advantages-of-using-pkce)
-7. [When and Where to Use PKCE](#when-and-where-to-use-pkce)
-8. [Code Implementation Details](#code-implementation-details)
-    - [Client Code](#client-code)
-    - [KeycloakStrategy](#keycloakstrategy)
-9. [Code Snippets](#code-snippets)
-    - [Generating Code Verifier and Code Challenge](#generating-code-verifier-and-code-challenge)
-    - [Authorization Parameters in KeycloakStrategy](#authorization-parameters-in-keycloakstrategy)
-    - [Token Parameters in KeycloakStrategy](#token-parameters-in-keycloakstrategy)
-    - [Client Authentication Flow](#client-authentication-flow)
-10. [Conclusion](#conclusion)
-
----
+4. [Implementation](#implementation)
+   - [Session Configuration](#session-configuration)
+   - [Authentication Routes](#authentication-routes)
+5. [Security Considerations](#security-considerations)
+6. [Best Practices](#best-practices)
+7. [Complete Implementation Example](#complete-implementation-example)
+8. [References](#references)
 
 ## Introduction
 
@@ -49,8 +30,8 @@ In modern web applications, securing authentication and authorization processes 
 3. **Authorization Code**: A temporary code received from the authorization server upon successful user authentication. It is exchanged for access tokens.
 4. **Code Challenge Method**: Specifies the method used to derive the code challenge from the code verifier. Commonly, `S256` (SHA-256) is used.
 
-## PKCE Flow Overview
 
+## PKCE Flow Overview
 
 ```
 +--------+                                +-------------------+                                +-----------------+
@@ -96,7 +77,6 @@ In modern web applications, securing authentication and authorization processes 
 |        |                                |                   |                                |                 |
 +--------+                                +-------------------+                                +-----------------+
 ```
-
 **Legend:**
 - **(A)**: User initiates the login process on the Client Application.
 - **(B)**: Client generates a `code_verifier` and derives a `code_challenge` using SHA-256.
@@ -117,15 +97,7 @@ This diagram illustrates each step of the PKCE flow, highlighting the interactio
 
 Implementing PKCE with Keycloak involves configuring both the client application and the authentication strategy used to communicate with Keycloak. In this setup, we utilize a custom Passport.js strategy, `KeycloakStrategy`, built upon the `passport-oauth2` library, to handle the OAuth 2.0 flow with PKCE.
 
-### Client Implementation
-
-The client application manages the OAuth flow, generates PKCE parameters, and maintains user sessions. Key aspects include:
-
-- **Generating PKCE Parameters**: Creating a `code_verifier` and deriving a `code_challenge`.
-- **Session Management**: Storing the `code_verifier` in the user's session for later verification.
-- **Authentication Routes**: Defining routes to initiate authentication, handle callbacks, and display user profiles.
-
-### Custom KeycloakStrategy
+### KeycloakStrategy
 
 `KeycloakStrategy` extends `OAuth2Strategy` from `passport-oauth2` to incorporate PKCE-specific parameters into the authorization and token requests. It handles:
 
@@ -133,105 +105,59 @@ The client application manages the OAuth flow, generates PKCE parameters, and ma
 - **Token Parameters**: Including the `code_verifier` during the token exchange.
 - **User Profile Retrieval**: Fetching and parsing user information from Keycloak's userinfo endpoint.
 
-## Step-by-Step PKCE Process
 
-### 1. Generating Code Verifier and Code Challenge
+## Implementation
 
-**Code Verifier**: A high-entropy string, typically between 43 and 128 characters, composed of URL-safe characters.
-
-**Code Challenge**: Derived from the code verifier using SHA-256 hashing and Base64 URL encoding.
-
-**Implementation in Client Code**:
+PKCE is automatically handled by KeycloakStrategy when enabled in the configuration:
 
 ```typescript
-function generateCodeVerifier(length = 128): string {
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-  return Array.from({ length }, () => possible.charAt(Math.floor(Math.random() * possible.length))).join('');
-}
+import KeycloakStrategy from 'passport-keycloak-oauth2-oidc-portable';
 
-function generateCodeChallenge(code_verifier: string): string {
-  return crypto.createHash('sha256').update(code_verifier).digest('base64url');
-}
+passport.use(new KeycloakStrategy({
+  clientID: 'test-client',
+  realm: 'TestRealm',
+  publicClient: true,
+  authServerURL: 'http://localhost:3000',
+  callbackURL: 'http://localhost:3002/auth/callback',
+  pkce: true,  // Enable PKCE
+  state: true  // Use StateStore
+}, callback));
 ```
 
-### 2. Initiating the Authorization Request
+### Session Configuration
 
-The client initiates the OAuth flow by redirecting the user to Keycloak's authorization endpoint, including PKCE parameters:
-
-- **code_challenge**: Derived from the code verifier.
-- **code_challenge_method**: Specifies the method used (`S256` for SHA-256).
-
-**Implementation in Client Code**:
+PKCE requires session support for storing the code verifier:
 
 ```typescript
-app.get('/auth/keycloak', (req: Request, res: Response, next: NextFunction) => {
-  let code_verifier: string | null = null;
-  let code_challenge: string | null = null;
+import session from 'express-session';
 
-  if (argv['use-pkce']) {
-    code_verifier = generateCodeVerifier();
-    code_challenge = generateCodeChallenge(code_verifier);
-    req.session.code_verifier = code_verifier;
+app.use(session({
+  secret: 'your-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000
   }
+}));
+```
 
+### Authentication Routes
+
+```typescript
+// Initialize authentication
+app.get('/auth/keycloak', 
+  passport.authenticate('keycloak')
+);
+
+// Handle callback with PKCE verification
+app.get('/auth/callback',
   passport.authenticate('keycloak', {
-    scope: ['openid', 'profile', 'email'],
-    ...(argv['use-pkce'] && {
-      code_challenge: code_challenge,
-      code_challenge_method: 'S256',
-    }),
-  })(req, res, next);
-});
+    successRedirect: '/profile',
+    failureRedirect: '/login'
+  })
+);
 ```
-
-### 3. Handling the Authorization Response
-
-After user authentication, Keycloak redirects back to the client's callback URL with an authorization code.
-
-**Implementation in Client Code**:
-
-```typescript
-app.get('/auth/keycloak/callback', (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('keycloak', (err: any, user: any, info: any) => {
-    if (err) {
-      return res.status(500).send('Internal Server Error during authentication.');
-    }
-
-    if (!user) {
-      return res.redirect('/login');
-    }
-
-    req.logIn(user, (err) => {
-      if (err) {
-        return res.status(500).send('Internal Server Error during login.');
-      }
-      return res.redirect('/profile');
-    });
-  })(req, res, next);
-});
-```
-
-### 4. Exchanging Authorization Code for Tokens
-
-The client exchanges the received authorization code for access tokens by sending a request to Keycloak's token endpoint, including the original `code_verifier`.
-
-**Implementation in KeycloakStrategy**:
-
-```typescript
-tokenParams(options: any): any {
-  const params: any = {};
-
-  if (options.req && options.req.session && options.req.session.code_verifier) {
-    params.code_verifier = options.req.session.code_verifier;
-  }
-
-  return params;
-}
-```
-
-### 5. Accessing Protected Resources
-
-With the access token obtained, the client can now access protected resources or APIs on behalf of the user.
 
 ## Advantages of Using PKCE
 
@@ -248,115 +174,75 @@ PKCE is particularly beneficial in scenarios where:
 - **High-Security Applications**: Systems handling sensitive user data requiring stringent security measures.
 - **Modern OAuth Implementations**: Adopting the latest OAuth 2.0 standards to ensure compatibility and security.
 
-## Code Implementation Details
-
-### Client Code
-
-The client manages the OAuth flow, generates PKCE parameters, and handles user sessions. Key components include:
-
-- **Session Management**: Uses `express-session` to store PKCE-related data (`code_verifier`).
-- **Authentication Routes**: Defines endpoints to initiate authentication and handle callbacks.
-- **PKCE Parameter Generation**: Generates `code_verifier` and `code_challenge` when PKCE is enabled.
-
-### KeycloakStrategy
-
-A custom Passport.js strategy that integrates PKCE into the OAuth 2.0 flow with Keycloak. It extends `OAuth2Strategy` and overrides specific methods to include PKCE parameters.
-
-- **authorizationParams**: Adds `code_challenge` and `code_challenge_method` to the authorization request.
-- **tokenParams**: Includes the `code_verifier` during the token exchange.
-- **userProfile**: Retrieves and parses user information from Keycloak's userinfo endpoint.
-
-## Code Snippets
-
-### Generating Code Verifier and Code Challenge
+## Complete Implementation Example
 
 ```typescript
-/**
- * Function to generate a random string for code_verifier.
- */
-function generateCodeVerifier(length = 128): string {
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-  return Array.from({ length }, () => possible.charAt(Math.floor(Math.random() * possible.length))).join('');
-}
+import express from 'express';
+import session from 'express-session';
+import passport from 'passport';
+import KeycloakStrategy from 'passport-keycloak-oauth2-oidc-portable';
 
-/**
- * Function to generate code_challenge from code_verifier.
- */
-function generateCodeChallenge(code_verifier: string): string {
-  return crypto.createHash('sha256').update(code_verifier).digest('base64url');
-}
-```
+const app = express();
 
-**Explanation**: The `generateCodeVerifier` function creates a high-entropy, URL-safe string, while the `generateCodeChallenge` function derives a SHA-256 hash of the verifier and encodes it in Base64 URL format.
-
-### Authorization Parameters in KeycloakStrategy
-
-```typescript
-/**
- * Override the authorizationParams method to include PKCE parameters.
- */
-authorizationParams(options: any): any {
-  const params: any = super.authorizationParams(options);
-
-  if (options.code_challenge) {
-    params.code_challenge = options.code_challenge;
-    params.code_challenge_method = 'S256';
+// Session configuration
+app.use(session({
+  secret: 'your-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000
   }
+}));
 
-  return params;
-}
-```
+app.use(passport.initialize());
+app.use(passport.session());
 
-**Explanation**: This method ensures that when PKCE is enabled, the `code_challenge` and its method (`S256`) are included in the authorization request sent to Keycloak.
+// Passport configuration
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
 
-### Token Parameters in KeycloakStrategy
+// Strategy setup with PKCE
+passport.use(new KeycloakStrategy({
+  clientID: 'test-client',
+  realm: 'TestRealm',
+  publicClient: true,
+  authServerURL: 'http://localhost:3000',
+  callbackURL: 'http://localhost:3002/auth/callback',
+  pkce: true,
+  state: true
+}, (accessToken, refreshToken, profile, done) => {
+  return done(null, { ...profile, accessToken });
+}));
 
-```typescript
-/**
- * Override the tokenParams method to include code_verifier from session.
- */
-tokenParams(options: any): any {
-  const params: any = {};
+// Routes
+app.get('/auth/keycloak', passport.authenticate('keycloak'));
 
-  if (options.req && options.req.session && options.req.session.code_verifier) {
-    params.code_verifier = options.req.session.code_verifier;
-  }
-
-  return params;
-}
-```
-
-**Explanation**: During the token exchange, this method retrieves the `code_verifier` stored in the user's session and includes it in the token request to Keycloak, completing the PKCE flow.
-
-### Client Authentication Flow
-
-```typescript
-/**
- * Initiates authentication with Keycloak.
- */
-app.get('/auth/keycloak', (req: Request, res: Response, next: NextFunction) => {
-  let code_verifier: string | null = null;
-  let code_challenge: string | null = null;
-
-  if (argv['use-pkce']) {
-    code_verifier = generateCodeVerifier();
-    code_challenge = generateCodeChallenge(code_verifier);
-    req.session.code_verifier = code_verifier;
-  }
-
-  // Initiate authentication.
+app.get('/auth/callback',
   passport.authenticate('keycloak', {
-    scope: ['openid', 'profile', 'email'],
-    ...(argv['use-pkce'] && {
-      code_challenge: code_challenge,
-      code_challenge_method: 'S256',
-    }),
-  })(req, res, next);
-});
+    successRedirect: '/profile',
+    failureRedirect: '/login'
+  })
+);
+
+app.get('/profile',
+  ensureAuthenticated,
+  (req, res) => {
+    res.json({ user: req.user });
+  }
+);
+
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) return next();
+  res.redirect('/auth/keycloak');
+}
+
+app.listen(3002);
 ```
 
-**Explanation**: This route initiates the authentication process. If PKCE is enabled (`use-pkce` flag), it generates the `code_verifier` and `code_challenge`, stores the verifier in the session, and includes the challenge in the authorization request sent to Keycloak.
+## References
 
-## Conclusion
-
-Implementing **PKCE** with **Keycloak** significantly fortifies the OAuth 2.0 authorization code flow by mitigating risks associated with authorization code interception. Through the integration of a custom **Passport.js** strategy, developers can seamlessly incorporate PKCE into their authentication mechanisms, ensuring that public clients operate securely without relying on client secrets.
+- [RFC 7636 - PKCE](https://tools.ietf.org/html/rfc7636)
+- [OAuth 2.0 Security Best Practices](https://tools.ietf.org/html/draft-ietf-oauth-security-topics)
+- [Secure applications and services with OpenID Connect](https://www.keycloak.org/securing-apps/oidc-layers)
+ 
