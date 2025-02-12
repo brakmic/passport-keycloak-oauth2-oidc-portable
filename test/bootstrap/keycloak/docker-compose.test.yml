@@ -1,34 +1,53 @@
 services:
-  keycloak:
+  nginx-test:
+    image: nginx:alpine
+    container_name: test-proxy
+    volumes:
+      - ${HOST_WORKSPACE}/test/bootstrap/keycloak/nginx.test.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:8080"  # For tests
+      - "3000:3000"  # For public client
+    networks:
+      - devnetwork
+    depends_on:
+      - keycloak-test
+
+  keycloak-test:
     build:
       context: .
-      dockerfile: keycloak.Dockerfile
-    container_name: keycloak-demo
+      dockerfile: test/bootstrap/keycloak/Dockerfile
+    container_name: testcloak
     environment:
       KC_DB: dev-file
-      KC_HOSTNAME: keycloak
-      KC_HOSTNAME_STRICT: false  # allow http://localhost:8080 calls via browser
+      KC_HOSTNAME: test-proxy
+      KC_HOSTNAME_STRICT: false
       KC_HEALTH_ENABLED: true
+      KC_HTTP_ENABLED: true
+      KC_HOSTNAME_PORT: 8080
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_IMPORT: /opt/keycloak/data/import/test-realm.json
     volumes:
       - "${HOST_WORKSPACE}/test/bootstrap/keycloak/test-realm.json:/opt/keycloak/data/import/test-realm.json"
-      - test_data:/opt/keycloak/data
     command:
       - start-dev
       - --import-realm
       - --verbose
-    restart: unless-stopped
-    ports:
-      - "8080:8080"  # For admin console
-      - "9000:9000"  # For health checks
     networks:
       - devnetwork
+
+  e2e-server:
+    build:
+      context: ../../..
+      dockerfile: test/e2e/Dockerfile
+    container_name: e2e-server
+    networks:
+      - devnetwork
+    depends_on:
+      - keycloak-test
+    environment:
+      - NODE_ENV=test
 
 networks:
   devnetwork:
     external: true
-
-volumes:
-  test_data:
