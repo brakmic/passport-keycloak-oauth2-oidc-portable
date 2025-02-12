@@ -18,5 +18,7 @@ export default {
   collectCoverage: true,
   coverageDirectory: "coverage",
   coveragePathIgnorePatterns: ["/node_modules/", "/dist/"],
-  verbose: true
+  verbose: true,
+  transformIgnorePatterns: ["node_modules"],
+  extensionsToTreatAsEsm: [".ts", ".mts"]
 }
