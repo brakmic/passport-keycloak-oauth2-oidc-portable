@@ -5,7 +5,6 @@ import cors from 'cors';
 import KeycloakStrategy from '../src/strategy';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs/yargs';
-import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ejs from 'ejs';
@@ -15,13 +14,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Extend express-session to include 
- * PKCE properties.
+ * Extend express-session with user data
  */
 declare module 'express-session' {
   interface SessionData {
-    code_verifier?: string;
-    oauthState?: string;
     user?: any;
   }
 }
@@ -46,13 +42,13 @@ const argv = yargs(hideBin(process.argv))
   .option('authServerUrl', {
     alias: 'auth',
     type: 'string',
-    default: 'http://localhost:8080',
+    default: 'http://localhost:3000',
     description: 'Keycloak Auth Server URL',
   })
   .option('clientId', {
     alias: 'client',
     type: 'string',
-    default: 'public-client',
+    default: 'test-client',
     description: 'Keycloak Client ID',
   })
   .option('callbackUrl', {
@@ -70,42 +66,73 @@ const argv = yargs(hideBin(process.argv))
   .option('use-pkce', {
     alias: 'pkce',
     type: 'boolean',
-    default: false,
+    default: true,
     description: 'Enable PKCE (Proof Key for Code Exchange)',
   })
   .help()
   .argv as YargsArguments;
 
-/**
- * Function to generate a random string for code_verifier.
- */
-function generateCodeVerifier(length = 128): string {
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-  return Array.from({ length }, () => possible.charAt(Math.floor(Math.random() * possible.length))).join('');
-}
 
-/**
- * Function to generate code_challenge from code_verifier.
- */
-function generateCodeChallenge(code_verifier: string): string {
-  return crypto.createHash('sha256').update(code_verifier).digest('base64url');
-}
-
-/**
- * Create an Express application
- */
+// Create an Express application
 const app = express();
-const PORT = 3002;
+
+// Debug logging
+const debugLogging = true;
+
+// Trust proxy settings
+app.set('trust proxy', 1);
+
+// Request parsers
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// Session configuration
+app.use(
+  session({
+    name: 'public-session',
+    secret: process.env.SESSION_SECRET || 'public-client-secret',
+    resave: true,
+    saveUninitialized: true,
+    proxy: true,
+    cookie: {
+      secure: false,
+      sameSite: 'lax',
+      httpOnly: true,
+      path: '/',
+      domain: 'localhost'
+    },
+  })
+);
 
 // CORS configuration
 app.use(
   cors({
-    origin: 'http://localhost:3002',
+    origin: ['http://localhost:3000', 'http://localhost:3002'],
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   })
 );
+
+
+// Initialize Passport and session.
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Debug middleware
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  if (debugLogging) {
+    console.log('Request Debug:', {
+      url: req.url,
+      method: req.method,
+      sessionID: req.sessionID,
+      session: req.session,
+      cookies: req.headers.cookie,
+      isAuthenticated: req.isAuthenticated?.()
+    });
+  }
+  next();
+});
 
 // View Engine setup
 const appRoot = path.resolve(__dirname, '..');
@@ -114,32 +141,12 @@ app.use(express.static(path.join(appRoot, 'samples', 'public')));
 app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 
-// Session configuration
-app.use(
-  session({
-    name: 'public-session',
-    secret: process.env.SESSION_SECRET || 'public-client-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      // Secure in production
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      httpOnly: true,
-    },
-  })
-);
 
 /**
- * Determine the client secret based on whether PKCE is used and the client is public.
- * For public clients, clientSecret should be an empty string.
- */
-const isPublicClient = true;
-// Replace with actual secret for confidential clients.
-// const clientSecret = isPublicClient ? '' : process.env.CLIENT_SECRET || '';
-
-/**
- * Passport configuration with passReqToCallback enabled internally.
+ * Passport configuration for KeycloakStrategy
+ * - Uses public client mode
+ * - PKCE is handled automatically by the strategy when enabled
+ * - Uses custom state store for enhanced security
  */
 passport.use(
   new KeycloakStrategy(
@@ -147,46 +154,32 @@ passport.use(
       realm: argv.realm,
       authServerURL: argv.authServerUrl,
       clientID: argv.clientId,
-      // Must always be a string
-      // clientSecret: clientSecret,
       callbackURL: argv.callbackUrl,
-       // Set based on your client type
-      publicClient: isPublicClient,
+      publicClient: true,
       sslRequired: 'none',
       scope: 'openid profile email',
-      // Include other optional properties if needed
-      customHeaders: undefined,
-      scopeSeparator: ' ',
-      sessionKey: undefined,
-      store: undefined,
-       // Let Passport.js handle state when PKCE is enabled
-      state: argv['use-pkce'] ? true : undefined,
-      skipUserProfile: undefined,
-      pkce: argv['use-pkce'] ? true : undefined,
-      proxy: undefined,
+      pkce: argv['use-pkce'],
+      state: true
     },
-    (
-       // 'req' is now accessible in the verify callback
-      _req: Request,
-      _accessToken: string,
-      _refreshToken: string,
-      profile: any,
-      done: (error: any, user?: any) => void
-    ) => {
-      // Map Keycloak's profile to the structure expected by the view
-      const userProfile = {
-        provider: profile.provider,
-        id: profile.id,
-        email_verified: profile._json.email_verified,
-        name: profile._json.name,
-        username: profile.username,
-        given_name: profile._json.given_name,
-        family_name: profile._json.family_name,
-        emails: profile.emails,
-      };
-
-      // Pass the mapped profile to Passport's done callback
-      done(null, userProfile);
+    (_req: Request, accessToken: string, refreshToken: string, profile: any, done: Function) => {
+      try {
+        const idToken = profile._id_token || null;
+        const user = {
+          provider: profile.provider,
+          id: profile.id,
+          email_verified: profile._json?.email_verified,
+          name: profile._json?.name,
+          username: profile.username,
+          given_name: profile._json?.given_name,
+          family_name: profile._json?.family_name,
+          emails: profile.emails,
+          tokens: { accessToken, refreshToken, idToken }
+        };
+        return done(null, user);
+      } catch (error) {
+        console.error('Keycloak Strategy Error:', error);
+        return done(error);
+      }
     }
   )
 );
@@ -194,101 +187,97 @@ passport.use(
 /**
  * Serialize user into the session.
  */
-passport.serializeUser((user: any, done) => {
-  done(null, user); // `user` is stored in session
+passport.serializeUser((user: any, done: any) => {
+  done(null, user);
 });
 
 /**
  * Deserialize user from the session.
  */
-passport.deserializeUser((user: any, done) => {
-  done(null, user); // `user` is retrieved from session
+passport.deserializeUser((user: any, done: any) => {
+  done(null, user);
 });
 
-// Initialize Passport and session.
-app.use(passport.initialize());
-app.use(passport.session());
+/**
+ * Middleware to ensure user is authenticated
+ */
+const ensureAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/login');
+};
 
-// Logging middleware for debugging.
-app.use((_req: Request, _res: Response, next: NextFunction) => {
-  // console.log(`Public Client Session ID: ${req.sessionID}`);
-  // console.log(`Authenticated User: ${JSON.stringify(req.user.username)}`);
-  next();
+/**
+ * Routes
+ */
+
+// Home page
+app.get('/', (req: Request, res: Response) => {
+  res.render('index', { user: req.user });
+});
+
+// Login page
+app.get('/login', (_req: Request, res: Response) => {
+  res.render('login');
+});
+
+/**
+ * Protected profile page with session check
+ */
+app.get('/profile', ensureAuthenticated, (req: Request, res: Response, _next: NextFunction) => {
+  if (!req.session) {
+    return res.redirect('/login');
+  }
+  res.render('profile', { userProfile: req.user });
 });
 
 /**
  * Initiates authentication with Keycloak.
+ * Ensures session is saved before redirect.
  */
 app.get('/auth/keycloak', (req: Request, res: Response, next: NextFunction) => {
-  let code_verifier: string | null = null;
-  let code_challenge: string | null = null;
-
-  if (argv['use-pkce']) {
-    code_verifier = generateCodeVerifier();
-    code_challenge = generateCodeChallenge(code_verifier);
-    req.session.code_verifier = code_verifier;
-    // console.log('Generated code_verifier and stored in session:', code_verifier);
-  }
-
-  // Initiate authentication.
-  passport.authenticate('keycloak', {
-    scope: ['openid', 'profile', 'email'],
-    ...(argv['use-pkce'] && {
-      code_challenge: code_challenge,
-      code_challenge_method: 'S256',
-    }),
-  })(req, res, next);
+  req.session.save((err: any) => {
+    if (err) {
+      console.error('Session save error:', err);
+      return next(err);
+    }
+    passport.authenticate('keycloak', {
+      scope: ['openid', 'profile', 'email']
+    })(req, res, next);
+  });
 });
 
 /**
  * Handles the callback from Keycloak after authentication.
- * Uses a custom callback to log detailed errors.
+ * Verifies session and saves user data.
  */
 app.get('/auth/keycloak/callback', (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('keycloak', (err: any, user: any, info: any) => {
-    if (err) {
-      console.error('Authentication Error:', err);
-      return res.status(500).send('Internal Server Error during authentication.');
-    }
+  passport.authenticate('keycloak', (err: any, user: any) => {
+    if (err) { return next(err); }
+    if (!user) { return res.redirect('/login'); }
 
-    if (!user) {
-      console.error('Authentication Failed:', info);
-      return res.redirect('/login');
-    }
-
-    req.logIn(user, (err) => {
-      if (err) {
-        console.error('Login Error:', err);
-        return res.status(500).send('Internal Server Error during login.');
-      }
-      // console.log('User successfully authenticated:', user.given_name);
-      return res.redirect('/profile');
+    req.logIn(user, (err: any) => {
+      if (err) { return next(err); }
+      req.session.save((err: any) => {
+        if (err) { return next(err); }
+        res.redirect('/profile');
+      });
     });
   })(req, res, next);
 });
 
 /**
- * Displays the user's profile information.
+ * Logs out the user and destroys session
  */
-app.get('/profile', (req: Request, res: Response, next: NextFunction): void => {
-  try {
-    if (!req.isAuthenticated() || !req.user) {
-      res.status(401).send('Unauthorized: User not authenticated.');
-      return;
-    }
-
-    res.render('profile', { userProfile: req.user });
-  } catch (error: unknown) {
-    console.error('Error rendering profile:', error instanceof Error ? error.message : error);
-    next(error); // Pass errors to Express error handler.
-  }
-});
-
-/**
- * Handles login failures.
- */
-app.get('/login', (_req: Request, res: Response) => {
-  res.status(401).send('Authentication Failed. Please try again.');
+app.get('/logout', (req: Request, res: Response, next: NextFunction) => {
+  req.logout((err: any) => {
+    if (err) { return next(err); }
+    req.session.destroy((err: any) => {
+      if (err) { return next(err); }
+      res.redirect('/');
+    });
+  });
 });
 
 /**
@@ -299,22 +288,23 @@ app.get('/debug-session', (req: Request, res: Response) => {
 });
 
 /**
- * Global error handler to catch and log unexpected errors.
+ * Global error handler
  */
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Unhandled Error:', err);
   res.status(500).send('Internal Server Error');
 });
 
-// Start server.
+const PORT = 3002;
+// Start server
 app.listen(PORT, () => {
   console.log(`Public Client running on http://localhost:${PORT}`);
-  console.log(`Using configuration:`);
+  console.log('Using configuration:');
   console.log(`  Auth Server URL: ${argv.authServerUrl}`);
   console.log(`  Realm: ${argv.realm}`);
   console.log(`  Client ID: ${argv.clientId}`);
   console.log(`  Callback URL: ${argv.callbackUrl}`);
   console.log(`  PKCE Enabled: ${argv['use-pkce']}`);
-  console.log(`To start the authentication process, open the following URL in your browser:`);
+  console.log('To start authentication, visit:');
   console.log(`  http://localhost:${PORT}/auth/keycloak`);
 });
