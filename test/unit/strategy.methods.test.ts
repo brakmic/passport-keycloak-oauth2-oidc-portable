@@ -2,14 +2,14 @@ import { jest, describe, it, expect } from '@jest/globals';
 import KeycloakStrategy from "../../src/strategy";
 import { InternalOAuthError } from "passport-oauth2";
 
-// Mock definitions for KeycloakStrategyOptions and VerifyCallbackWithRequest
+// Mock definitions for KeycloakStrategyOptions and VerifyCallback
 interface KeycloakStrategyOptions {
   authorizationURL?: string;
   tokenURL?: string;
   realm: string;
   authServerURL: string;
   clientID: string;
-  clientSecret: string;
+  clientSecret?: string;
   callbackURL: string;
   publicClient?: boolean;
   sslRequired?: "all" | "external" | "none";
@@ -24,7 +24,7 @@ interface KeycloakStrategyOptions {
   proxy?: any;
 }
 
-type VerifyCallbackWithRequest = (
+type VerifyCallback = (
   req: any,
   accessToken: string,
   refreshToken: string,
@@ -34,17 +34,28 @@ type VerifyCallbackWithRequest = (
 
 type OAuth2Callback = (error: any, result?: any) => void;
 
+const baseOptionsPKCE: KeycloakStrategyOptions = {
+  realm: "testRealm",
+  authServerURL: "http://localhost:8080",
+  clientID: "testClient",
+  clientSecret: 'client_secret',
+  callbackURL: "http://localhost/callback",
+  pkce: true,
+  state: true
+};
+
 const baseOptions: KeycloakStrategyOptions = {
   realm: "testRealm",
   authServerURL: "http://localhost:8080",
   clientID: "testClient",
-  clientSecret: "testSecret",
+  clientSecret: 'client_secret',
   callbackURL: "http://localhost/callback",
+  pkce: false
 };
 
 // Extended class to expose protected methods for testing
 class TestableKeycloakStrategy extends KeycloakStrategy {
-  constructor(options: KeycloakStrategyOptions, verify: VerifyCallbackWithRequest) {
+  constructor(options: KeycloakStrategyOptions, verify: VerifyCallback) {
     super(options, verify);
   }
 
@@ -64,14 +75,14 @@ class TestableKeycloakStrategy extends KeycloakStrategy {
 describe("KeycloakStrategy Methods", () => {
   describe("authorizationParams", () => {
     it("should add PKCE parameters if provided", () => {
-      const strategy = new TestableKeycloakStrategy(baseOptions, jest.fn());
-      const params = strategy.authorizationParams({ req: { session: { code_challenge: "testChallenge" } } });
+      const strategy = new TestableKeycloakStrategy(baseOptionsPKCE, jest.fn());
+      const params = strategy.authorizationParams({ req: { session: { data: "some_data" } } });
 
-      expect(params.code_challenge).toBe("testChallenge");
+      expect(params.code_challenge).not.toBeUndefined();
       expect(params.code_challenge_method).toBe("S256");
     });
 
-    it("should not add PKCE parameters if not provided", () => {
+    it("should not add PKCE parameters if pkce is false", () => {
       const strategy = new TestableKeycloakStrategy(baseOptions, jest.fn());
       const params = strategy.authorizationParams({});
 
@@ -81,18 +92,14 @@ describe("KeycloakStrategy Methods", () => {
   });
 
   describe("tokenParams", () => {
-    it("should add code_verifier if present in the session", () => {
-      const strategy = new TestableKeycloakStrategy(baseOptions, jest.fn());
-      const params = strategy.tokenParams({
-        req: {
-          session: { code_verifier: "testVerifier" },
-        },
-      });
+    it("should add code_verifier if pkce is true", () => {
+      const strategy = new TestableKeycloakStrategy(baseOptionsPKCE, jest.fn());
+      const params = strategy.tokenParams({ req: { session: { pkce: { code_verifier: 'code_verifier' } }}});
 
-      expect(params.code_verifier).toBe("testVerifier");
+      expect(params.code_verifier).not.toBeUndefined();
     });
 
-    it("should not add code_verifier if not present in the session", () => {
+    it("should not add code_verifier if pkce is false", () => {
       const strategy = new TestableKeycloakStrategy(baseOptions, jest.fn());
       const params = strategy.tokenParams({ req: {} });
 
@@ -123,7 +130,7 @@ describe("KeycloakStrategy Methods", () => {
         protected _oauth2 = mockOAuth2 as any;
       }
 
-      const strategy = new MockKeycloakStrategy(baseOptions, jest.fn());
+      const strategy = new MockKeycloakStrategy(baseOptionsPKCE, jest.fn());
 
       strategy.userProfile(mockAccessToken, (err: any, profile: any) => {
         expect(err).toBeNull();
@@ -157,7 +164,7 @@ describe("KeycloakStrategy Methods", () => {
         protected _oauth2 = mockOAuth2 as any;
       }
 
-      const strategy = new MockKeycloakStrategy(baseOptions, jest.fn());
+      const strategy = new MockKeycloakStrategy(baseOptionsPKCE, jest.fn());
 
       strategy.userProfile(mockAccessToken, (err: any, profile: any) => {
         expect(err).toBeInstanceOf(InternalOAuthError);
@@ -179,7 +186,7 @@ describe("KeycloakStrategy Methods", () => {
         protected _oauth2 = mockOAuth2 as any;
       }
 
-      const strategy = new MockKeycloakStrategy(baseOptions, jest.fn());
+      const strategy = new MockKeycloakStrategy(baseOptionsPKCE, jest.fn());
 
       strategy.userProfile(mockAccessToken, (err: any, profile: any) => {
         expect(err).toBeInstanceOf(Error);
