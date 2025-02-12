@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.6.0](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.5.3...v2.6.0) (2025-02-12)
+
+
+### Features
+
+* add custom state store tests ([c248052](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/c248052513ea5ea1a48274137cc6063b00a755b1))
+* add keycloak and e2e dockerfiles ([c502904](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/c50290464a4b7787eb38027de75f5ce93a73a236))
+* add nginx config to test ([08a1a10](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/08a1a105956b733b11289133070aea886f5a7876))
+* add nginx proxy and e2e server to docker compose yaml ([d9473cd](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/d9473cda52068c92365da04d42e7db0e5f71faf7))
+* add setup test environment script ([722eb7f](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/722eb7fb149afcc9ed36db3a702773d602ee132e))
+* implement pkce support ([c617a74](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/c617a749548868f5dc921aa4051162cba9366f92))
+* use pkce from strategy in public client ([1465691](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/commit/1465691ed4697278b0c97e89cacc51da97106a7c))
+
 ### [2.5.3](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.5.2...v2.5.3) (2025-02-04)
 
 ### [2.5.2](https://github.com/brakmic/passport-keycloak-oauth2-oidc-portable/compare/v2.5.1...v2.5.2) (2025-02-04)
