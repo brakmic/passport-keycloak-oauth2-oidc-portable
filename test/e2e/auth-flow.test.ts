@@ -2,24 +2,27 @@ import { jest, describe, it, beforeAll, afterAll, expect } from '@jest/globals';
 import { Issuer, generators } from "openid-client";
 import puppeteer from "puppeteer";
 import axios from "axios";
-import express from "express";
-import http from "http";
+import { createServer } from "http";
+import type { Server } from "http";
 import config from "../config";
 import { waitForServiceReady } from "../utils";
 
 jest.setTimeout(180000);
 
+let express: any;
+
 describe("E2E Test for Authentication and Protected Resource", () => {
   let tokens: any;
-  let server: http.Server;
+  let server: Server;
 
   beforeAll(async () => {
+    express = (await import('express')).default;
     // Start a lightweight callback server for handling the `/sink` route
     const app = express();
     const serverPort = 3000;
 
     const authorizationCodePromise = new Promise<string>((resolve, reject) => {
-      app.get("/sink", (req, res) => {
+      app.get("/sink", (req: any, res: any) => {
         const { code } = req.query;
         if (code) {
           res.send("Authorization code received.");
@@ -31,7 +34,7 @@ describe("E2E Test for Authentication and Protected Resource", () => {
       });
     });
 
-    server = http.createServer(app);
+    server = createServer(app);
     await new Promise<void>((resolve) => server.listen(serverPort, resolve));
     console.log(`Callback server running at http://localhost:${serverPort}/sink`);
 
@@ -89,7 +92,7 @@ describe("E2E Test for Authentication and Protected Resource", () => {
   });
 
   it("should access protected resource with access token", async () => {
-    const apiResponse = await axios.get("http://localhost:4000/protected-resource", {
+    const apiResponse = await axios.get("http://e2e-server:4000/protected-resource", {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
 
