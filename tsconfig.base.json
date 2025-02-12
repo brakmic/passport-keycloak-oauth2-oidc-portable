@@ -12,6 +12,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "composite": true
+    "composite": true,
+    "types": ["node", "jest"]
   }
 }
