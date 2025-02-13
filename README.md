@@ -25,7 +25,7 @@
 
 ## Why I Did This
 
-The original [passport-keycloak](https://github.com/louie007/passport-keycloak-oauth2-oidc) wasn't up to date. I modernized it with improved PKCE support, standalone client examples, and TypeScript support. Check out my blog for tutorials: [blog.brakmic.com](https://blog.brakmic.com).
+The original [passport-keycloak-oauth2-oidc](https://github.com/louie007/passport-keycloak-oauth2-oidc) wasn't up to date. I modernized it with improved PKCE support, standalone client examples, and TypeScript support. Check out my blog for tutorials: [blog.brakmic.com](https://blog.brakmic.com).
 
 ## What's New in This Fork?
 
@@ -37,8 +37,13 @@ The original [passport-keycloak](https://github.com/louie007/passport-keycloak-o
 ## Installation
 
 ```bash
-(p)npm add passport-keycloak-oauth2-oidc-portable
+npm install passport-keycloak-oauth2-oidc-portable
 ```
+
+```bash
+pnpm add passport-keycloak-oauth2-oidc-portable
+```
+
 ```bash
 yarn add passport-keycloak-oauth2-oidc-portable
 ```
