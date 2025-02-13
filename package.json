@@ -145,7 +145,6 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
-    "@angular/cli": "^19.1.6",
     "passport-oauth2": "^1.8.0"
   }
 }
