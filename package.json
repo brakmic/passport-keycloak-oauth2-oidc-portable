@@ -1,6 +1,6 @@
 {
   "name": "passport-keycloak-oauth2-oidc-portable",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "A Passport.js strategy for authenticating with Keycloak using the OAuth2/OIDC API (portable version)",
   "main": "./cjs/index.js",
   "module": "./lib/index.js",
